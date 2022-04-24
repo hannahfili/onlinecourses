@@ -18,6 +18,8 @@ let access_token = "";
 let refresh_token = "";
 let loggedInEmail = "";
 let loggedInPassword = "";
+let loggedInRole = "";
+let loggedInPlatformAccessTimeout = "";
 // --------------------END OF selectors--------------------
 
 // --------------------roles' IDs--------------------
@@ -55,24 +57,46 @@ async function logInManager(e) {
             const responseJson = await response.json();
             //get users data: roleId
 
-            getLoggedUserData(email.value, password.value, responseJson);
-            window.location = "main.html";
+            await getLoggedUserData(email.value, password.value, responseJson);
+            //window.location = "main.html";
         }
         else {
             console.log("error");
         }
     }
 }
-function getLoggedUserData(email, password, responseJson) {
+async function getLoggedUserData(email, password, responseJson) {
     loggedInEmail = email;
     loggedInPassword = password;
     access_token = responseJson["data"]["access_token"];
+    console.log(access_token);
     refresh_token = responseJson["data"]["refresh_token"];
+    let response;
+    try {
+        response = await fetch(`${appAddress}/users/me`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${access_token}`
+            }
+        });
+        const responseJson = await response.json();
+        loggedInRole = responseJson["data"]["role"];
+        loggedInPlatformAccessTimeout = responseJson["data"]["Platform_access_timeout"];
+    }
+    catch (err) {
+        console.error(`${err}`);
+    }
+    wypisz();
 
 }
 function wypisz() {
+    console.log(loggedInEmail);
+    console.log(loggedInPassword);
     console.log(access_token);
     console.log(refresh_token);
+    console.log(loggedInRole);
+    console.log(loggedInPlatformAccessTimeout);
 }
 async function logIn(email, password) {
     let response;
