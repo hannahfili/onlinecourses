@@ -2,9 +2,14 @@
 
 let id = (id) => document.getElementById(id);
 let classes = (classes) => document.getElementsByClassName(classes);
+let nameGetter = (names) => document.getElementsByName(names);
 
 let register_form = id("register-form");
 let log_in_form = id("log-in-form");
+let edit_user_form = id("edit-user-form");
+let add_user_form = id("add-user-form");
+let checkboxesCount = 0;
+let numberOfBoxesChecked = 0;
 // --------------------END OF selectors--------------------
 
 // --------------------roles' IDs--------------------
@@ -23,8 +28,18 @@ if (log_in_form) {
     log_in_form.addEventListener("submit", function (e) {
         logInManager(e);
     });
-
 }
+if (edit_user_form) {
+    edit_user_form.addEventListener("submit", function (e, mode) {
+        userManager(e, "edition");
+    });
+}
+if (add_user_form) {
+    add_user_form.addEventListener("submit", function (e, mode) {
+        userManager(e, "addition");
+    });
+}
+
 async function logInManager(e) {
     let email = id("email-log-in");
     let password = id("password-log-in");
@@ -34,10 +49,10 @@ async function logInManager(e) {
     e.preventDefault();
 
     let output = true;
-    if (!validateEmail(email, emailErrorLogIn)) {
+    if (!validateEmail(email.value, emailErrorLogIn)) {
         output = false;
     }
-    if (!validatePassword(password, passwordErrorLogIn)) {
+    if (!validatePassword(password.value, passwordErrorLogIn)) {
         output = false;
     }
     if (output) {
@@ -121,13 +136,13 @@ function validateRegistrationData() {
     let passwordErrorOneRegister = id("password-error");
     let passwordErrorTwoRegister = id("password2-error");
 
-    if (!validateEmail(email, emailErrorRegister)) {
+    if (!validateEmail(email.value, emailErrorRegister)) {
         output = false;
     }
-    if (!validatePassword(password, passwordErrorOneRegister)) {
+    if (!validatePassword(password.value, passwordErrorOneRegister)) {
         output = false;
     }
-    if (!validatePassword(password2, passwordErrorTwoRegister)) {
+    if (!validatePassword(password2.value, passwordErrorTwoRegister)) {
         output = false;
     }
     if (password.value !== password2.value) {
@@ -169,7 +184,7 @@ async function registerManager(e) {
 
 function validateEmail(inputText, outputPlace) {
     var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-    if (inputText.value.match(mailformat)) {
+    if (inputText.match(mailformat)) {
         return true;
     }
     else {
@@ -183,21 +198,21 @@ function focus() {
 }
 function validatePassword(myInput, outputPlace) {
     // Validate length
-    if (myInput.value.length < 8) {
+    if (myInput.length < 8) {
         outputPlace.textContent = "Hasło powinno zawierać co najmniej 8 znaków";
         return false;
     }
     else outputPlace.textContent = "";
     // Validate lowercase letters
     let lowerCaseLetters = /[a-z]/g;
-    if (!myInput.value.match(lowerCaseLetters)) {
+    if (!myInput.match(lowerCaseLetters)) {
         outputPlace.textContent = "Hasło powinno zawierać małe litery";
         return false;
     }
     else outputPlace.textContent = "";
     // Validate capital letters
     let upperCaseLetters = /[A-Z]/g;
-    if (!myInput.value.match(upperCaseLetters)) {
+    if (!myInput.match(upperCaseLetters)) {
         outputPlace.textContent = "Hasło powinno zawierać wielkie litery";
         return false;
     }
@@ -205,7 +220,7 @@ function validatePassword(myInput, outputPlace) {
 
     // Validate numbers
     let numbers = /[0-9]/g;
-    if (!myInput.value.match(numbers)) {
+    if (!myInput.match(numbers)) {
         outputPlace.textContent = "Hasło powinno zawierać liczby";
         return false;
     }
@@ -217,8 +232,8 @@ function validatePassword(myInput, outputPlace) {
 async function createAccount(email, password, studentAccount = true) {
     let roleId = studentAccount ? studentRoleId : teacherRoleId;
 
-    alert("rola studenta: ", roleId);
-    alert("rola tutejsza:", roleId);
+    // alert("rola studenta: ", roleId);
+    // alert("rola tutejsza:", roleId);
 
     let response;
     const date = new Date();
@@ -320,43 +335,437 @@ async function displayAllUsers() {
 
 }
 async function displayUsersOneByOne(response) {
-    var mainContainer = id("admin-users-all-users");
-
-    // for (var i = 0; i < data.length; i++) {
-    //     const card = document.createElement('div');
-    //     card.setAttribute('class', 'card');
-    //     const h1 = document.createElement('h1');
-    //     h1.textContent = data[i]["email"];
-    //     mainContainer.appendChild(card);
-    // }
-
-    // // data.forEach(person => {
-    // //     const card = document.createElement('div')
-    // //     card.setAttribute('class', 'card')
-    // //     const h1 = document.createElement('h1')
-    // //     h1.textContent = person["email"]
-    // //     mainContainer.appendChild(card)
-    // // })
-
+    var mainContainer = id("admin-users-all-users-table-display");
+    let buttonToDeleteManyUsers = id("admin-users-delete-many-users");
     const json = await response.json();
+    checkboxesCount = json.data.length;
+    let checkboxesElements = {};
     console.log(json);
     for (var i = 0; i < json.data.length; i++) {
-        var person = json.data[i];
-        var email = person["email"];
-        const card = document.createElement('div');
-        card.setAttribute('id', `user-details-email-${person["id"]}`);
-        card.textContent = `${email}`;
-        mainContainer.appendChild(card);
-        // var content = document.createTextNode(`${email}`);
-        // document.body.appendChild(content);
+        (function (index) {
+            var person = json.data[index];
+            var email = person["email"];
+
+            const row = document.createElement('tr');
+
+            const emailBox = document.createElement('td');
+            emailBox.setAttribute('id', `user-details-email-${person["id"]}`);
+            emailBox.textContent = `${email}`;
+            row.appendChild(emailBox);
+
+            const editBox = document.createElement('td');
+            editBox.setAttribute('id', `user-details-editbox-user-${person["id"]}`);
+
+            const buttonEditUser = document.createElement('button');
+            buttonEditUser.setAttribute('id', `button-admin-users-edit-user-${person["id"]}`);
+            buttonEditUser.setAttribute('class', `btn btn-secondary`);
+            buttonEditUser.textContent = "Edytuj dane";
+            buttonEditUser.addEventListener('click', function () { saveUserToEditAndRedirect(person) });
+            editBox.appendChild(buttonEditUser);
+            row.appendChild(editBox);
+
+            const deleteBox = document.createElement('td');
+            deleteBox.setAttribute('id', `user-details-deletebox-user-${person["id"]}`);
+
+            const buttonDeleteUser = document.createElement('button');
+            buttonDeleteUser.setAttribute('id', `button-admin-users-delete-user-${person["id"]}`);
+            buttonDeleteUser.setAttribute('class', `btn btn-secondary`);
+            buttonDeleteUser.textContent = "Usuń użytkownika";
+            buttonDeleteUser.addEventListener('click', function () { deleteManager(person) });
+            deleteBox.appendChild(buttonDeleteUser);
+            row.appendChild(deleteBox);
+
+            const roleBox = document.createElement('td');
+            roleBox.setAttribute('id', `user-details-rolebox-user-${person["id"]}`);
+
+            if (person["role"] != teacherRoleId) {
+                const buttonBestowTeacherRoleUponPerson = document.createElement('button');
+                buttonBestowTeacherRoleUponPerson.setAttribute('id', `button-admin-users-bestow-teacher-role-${person["id"]}`);
+                buttonBestowTeacherRoleUponPerson.setAttribute('class', `btn btn-secondary btn-success`);
+                buttonBestowTeacherRoleUponPerson.textContent = "Nadaj rolę nauczyciela";
+
+                buttonBestowTeacherRoleUponPerson.addEventListener('click', function () { updateUserData(person["id"], "role", teacherRoleId, "bestow teacher role") });
+                roleBox.appendChild(buttonBestowTeacherRoleUponPerson);
+            }
+            else {
+                const buttonCancelTeacherRoleUponPerson = document.createElement('button');
+                buttonCancelTeacherRoleUponPerson.setAttribute('id', `button-admin-users-cancel-teacher-role-${person["id"]}`);
+                buttonCancelTeacherRoleUponPerson.setAttribute('class', `btn btn-secondary`);
+                buttonCancelTeacherRoleUponPerson.textContent = "Odbierz rolę nauczyciela";
+
+                buttonCancelTeacherRoleUponPerson.addEventListener('click', function () { updateUserData(person["id"], "role", studentRoleId, "cancel teacher role") });
+                roleBox.appendChild(buttonCancelTeacherRoleUponPerson);
+            }
+            row.appendChild(roleBox);
+
+            const checkboxBox = document.createElement('td');
+            checkboxBox.setAttribute('id', `user-details-checkbox-user-${person["id"]}`);
+
+            const checkbox = document.createElement('input');
+            checkbox.setAttribute('id', `checkbox-admin-users-${person["id"]}`);
+            checkbox.setAttribute('class', `form-check-input`);
+            checkbox.setAttribute('type', 'checkbox');
+            checkbox.addEventListener('click', function () { enableDisableButton(this, buttonToDeleteManyUsers) });
+            checkboxesElements[`${person["id"]}`] = checkbox;
+            checkboxBox.appendChild(checkbox);
+
+            row.appendChild(checkboxBox);
+
+            mainContainer.appendChild(row);
+        })(i);
+    }
+
+    buttonToDeleteManyUsers.addEventListener('click', function () { deleteManyUsers(checkboxesElements) });
+
+}
+async function deleteManyUsers(checkboxesElements) {
+    let mainContainer = id("admin-users-all-users");
+    let usersToDelete = "[";
+    for (let key in checkboxesElements) {
+        if (checkboxesElements[key].checked) {
+            console.log("usunac: ", key);
+            usersToDelete += '"';
+            usersToDelete += key;
+            usersToDelete += '"';
+            usersToDelete += ", ";
+        }
+    }
+    let removeLastCommaAndSpace = usersToDelete.slice(0, usersToDelete.length - 2);
+    let jsonUsersArray = removeLastCommaAndSpace += "]";
+    console.log(jsonUsersArray);
+    let answer = window.confirm(`Czy na pewno chcesz usunąć zaznaczonych użytkowników?`);
+
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    if (answer) {
+        try {
+            id("admin-users-all-users-table").remove();
+            id("admin-users-delete-many-users").remove();
+            response = await fetch(`${appAddress}/users`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+                },
+                body: jsonUsersArray
+            });
+
+            if (response.ok) {
+
+                let success = document.createElement('div');
+                success.setAttribute('class', `success`);
+                success.setAttribute('id', `admin-users-success-div`);
+                success.textContent = `Usunięto zaznaczonych użytkowników`;
+                mainContainer.appendChild(success);
+            }
+            else {
+                responseNotOkayFound = true;
+            }
+
+        }
+        catch (err) {
+            console.error(`${err}`);
+            errorOccured = true;
+        }
+        if (errorOccured || responseNotOkayFound) {
+            let failure = document.createElement('div');
+            failure.setAttribute('class', `failure`);
+            failure.setAttribute('id', `admin-users-failure-div`);
+            failure.textContent = `Nie udało się usunąć zaznaczonych użytkowników`;
+            mainContainer.appendChild(failure);
+        }
+
+        let returnButton = document.createElement('button');
+        returnButton.setAttribute('id', 'admin-users-return-button');
+        returnButton.addEventListener('click', function () { window.location = "admin-users.html" });
+        returnButton.textContent = "Wróć do menadżera użytkowników";
+        mainContainer.appendChild(returnButton);
+    }
+
+}
+function enableDisableButton(checkbox, buttonToDeleteManyUsers) {
+    if (checkbox.checked) {
+        numberOfBoxesChecked += 1;
+        buttonToDeleteManyUsers.classList.remove("disabled");
+    }
+    else {
+        numberOfBoxesChecked -= 1;
+        if (numberOfBoxesChecked < 1) {
+            buttonToDeleteManyUsers.classList.add("disabled");
+        }
+    }
+}
+
+async function deleteManager(person) {
+    let userId = person["id"];
+    let confirmed = confirmDeletion(person);
+    let message;
+    if (confirmed) {
+        await deleteFromDatabase(userId);
+        message = `Usunięto użytkownika: ${person["email"]}`;
+    }
+    else {
+        message = `Użytkownik ${person["email"]} nie został usunięty`;
+    }
+    alert(message);
+    if (confirmed) document.location.reload();
+}
+function confirmDeletion(user) {
+    console.log(JSON.stringify(user));
+    let email = user["email"];
+    let answer = window.confirm(`Czy na pewno chcesz usunąć poniższego użytkownika?\n${email}`);
+    return answer;
+}
+
+async function deleteFromDatabase(userId) {
+    let response;
+    try {
+        response = await fetch(`${appAddress}/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+    }
+    catch (err) {
+        alert(err);
+        console.error(`${err}`)
+    }
+}
+function saveUserToEditAndRedirect(userDataJson) {
+
+    localStorage.setItem("edit_user_id", userDataJson["id"]);
+    localStorage.setItem("edit_user_firstName", userDataJson["first_name"]);
+    localStorage.setItem("edit_user_lastName", userDataJson["last_name"]);
+    localStorage.setItem("edit_user_email", userDataJson["email"]);
+
+    // console.log(localStorage.getItem("edit_user_firstName"));
+    // console.log(localStorage.getItem("edit_user_lastName"));
+    // console.log(localStorage.getItem("edit_user_email"));
+
+    window.location = "editUser.html";
+}
+async function redirectToIndexIfUserIsNotLoggedInAdmin() {
+    let userIsLoggedAndAdmin = await checkIfUserIsLoggedInAndIfItIsAdmin();
+    if (!userIsLoggedAndAdmin) {
+        alert("Sesja wygasła. Zaloguj się ponownie");
+        window.location.href = "/index.html";
+    }
+}
+
+function setEditUserDefaultFields() {
+    redirectToIndexIfUserIsNotLoggedInAdmin();
+
+    let firstName = localStorage.getItem("edit_user_firstName");
+    let lastName = localStorage.getItem("edit_user_lastName");
+    let email = localStorage.getItem("edit_user_email");
+
+    let firstNameElement = nameGetter("edit-user-first-name");
+    let lastNameElement = nameGetter("edit-user-last-name");
+    let emailElement = nameGetter("edit-user-email");
+    // let passwordElementOne = nameGetter("edit-user-password");
+    // let passwordElementTwo = nameGetter("edit-user-password-2");
+
+
+    firstName != "null" ? firstNameElement[0].placeholder = firstName : firstNameElement[0].placeholder = "";
+    lastName != "null" ? lastNameElement[0].placeholder = lastName : lastNameElement[0].placeholder = "";
+    email != "null" ? emailElement[0].placeholder = email : emailElement[0].placeholder = "";
+
+    console.log(localStorage.getItem("edit_user_firstName"));
+    console.log(localStorage.getItem("edit_user_lastName"));
+    console.log(localStorage.getItem("edit_user_email"));
+
+
+}
+async function userManager(e, mode) {
+
+    e.preventDefault();
+    console.log("userManager");
+    await redirectToIndexIfUserIsNotLoggedInAdmin();
+    let checked = false;
+    let prefix;
+    if (mode == "edition") prefix = "edit";
+    else {
+        prefix = "add";
+        if (id("add-user-bestow-teacher-role").checked) {
+            checked = true;
+            console.log(checked);
+        }
+    }
+    let mainContainer = id(`${prefix}-user-main-container`);
+
+    let firstNameElement = id(`${prefix}-user-first-name`);
+    let lastNameElement = id(`${prefix}-user-last-name`);
+    let emailElement = id(`${prefix}-user-email`);
+    let passwordElementOne = id(`${prefix}-user-password`);
+    let passwordElementTwo = id(`${prefix}-user-password-2`);
+
+    console.log(firstNameElement.value);
+    console.log(lastNameElement.value);
+    console.log(emailElement.value);
+    console.log(passwordElementOne.value);
+    console.log(passwordElementTwo.value);
+
+    let passwordOneErrorContainer = id(`${prefix}-user-password-error`);
+    let passwordTwoErrorContainer = id(`${prefix}-user-password2-error`);
+    let emailErrorContainer = id(`${prefix}-user-email-error`);
+
+
+    let validated = validateAdditionOrEditionData(emailElement.value, passwordElementOne.value, passwordElementTwo.value,
+        passwordOneErrorContainer, passwordTwoErrorContainer, emailErrorContainer);
+    console.log(validated);
+    console.log(firstNameElement.value);
+    console.log(lastNameElement.value);
+    let errorContainer = id(`${prefix}-all-error`);
+
+    if (validated) {
+        const valuesToUpdate = makeDictionaryOfInputData(emailElement.value,
+            passwordElementOne.value, firstNameElement.value, lastNameElement.value);
+        if (mode == "addition") {
+            if (checked) valuesToUpdate["role"] = teacherRoleId;
+            else valuesToUpdate["role"] = studentRoleId;
+        }
+
+        for (let key in valuesToUpdate) {
+            console.log(key, ": ", valuesToUpdate[key]);
+        }
+        if (mode == "edition") updateUserDataManager(valuesToUpdate, errorContainer, mainContainer)
+        else addUserDataManager(valuesToUpdate, errorContainer, mainContainer);
+    }
+    else {
+        errorContainer.textContent = `Wprowadzono niepoprawne dane. Spróbuj jeszcze raz`;
+    }
+}
+async function updateUserDataManager(valuesToUpdate, errorContainer, mainContainer) {
+    let response;
+    let allResponses;
+    let responseNotOkayFound = false;
+
+    for (let key in valuesToUpdate) {
+        if (valuesToUpdate[key] != "") {
+            console.log(valuesToUpdate[key]);
+            console.log(key);
+            response = await updateUserData(localStorage.getItem("edit_user_id"), key, valuesToUpdate[key], `edit_${key}`);
+            allResponses.push(respone);
+        }
+    }
+    for (let partResponse in allResponses) {
+        if (!partResponse.ok) {
+            errorContainer.textContent = `Wystąpił problem przy aktualizacji danej: ${key}`;
+            responseNotOkayFound = true;
+            break;
+        }
+    }
+    if (!responseNotOkayFound) {
+        edit_user_form.remove();
+        let success = document.createElement('div');
+        success.setAttribute('class', `success`);
+        success.setAttribute('id', `edit-user-success-div`);
+        success.textContent = `Udało się dodać użytkownika: ${email}`;
+
+        let returnButton = document.createElement('button');
+        returnButton.setAttribute('id', 'edit-user-return-button');
+        returnButton.addEventListener('click', function () { window.location = "admin-users.html" });
+        returnButton.textContent = "Wróć do menadżera użytkowników";
+
+
+        mainContainer.appendChild(success);
+        mainContainer.appAddress(returnButton);
+
+    }
+}
+async function addUserDataManager(valuesToAdd, errorContainer, mainContainer) {
+    let jsonValues = JSON.stringify(valuesToAdd);
+    let response;
+    try {
+        response = await fetch(`${appAddress}/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: jsonValues
+        });
+        if (!response.ok) {
+            errorContainer.textContent = `Wystąpił problem przy dodawaniu użytkownika - ${response.statusText}`;
+        }
+        else {
+            add_user_form.remove();
+            let success = document.createElement('div');
+            success.setAttribute('class', `success`);
+            success.setAttribute('id', `add-user-success-div`);
+            success.textContent = `Udało się dodać użytkownika: ${valuesToAdd["email"]}`;
+
+            let returnButton = document.createElement('button');
+            returnButton.setAttribute('id', 'add-user-return-button');
+            returnButton.addEventListener('click', function () { window.location = "admin-users.html" });
+            returnButton.textContent = "Wróć do menadżera użytkowników";
+
+
+            mainContainer.appendChild(success);
+            mainContainer.appendChild(returnButton);
+        }
+    }
+    catch (err) {
+        console.error(`${err}`)
 
     }
 
 
+}
+function makeDictionaryOfInputData(email, passwordOne, firstName, lastName) {
+    const data = {
+        "email": email,
+        "password": passwordOne,
+        "first_name": firstName,
+        "last_name": lastName
+    };
+    return data;
 
 }
+function validateAdditionOrEditionData(email, passwordOne, passwordTwo,
+    passwordOneErrorContainer, passwordTwoErrorContainer, emailErrorContainer) {
+
+    if (email != "") {
+        if (!validateEmail(email, emailErrorContainer)) return false;
+    }
+    if (passwordOne != "" && passwordTwo != "") {
+        if (!validatePassword(passwordOne, passwordOneErrorContainer)) return false;
+        if (!validatePassword(passwordTwo, passwordTwoErrorContainer)) return false;
+        if (passwordOne != passwordTwo) {
+            passwordTwoErrorContainer.textContent = "Hasła muszą być takie same";
+            return false;
+        }
+    }
+    return true;
+
+}
+async function updateUserData(userId, fieldName, fieldValue, actualizationName) {
+    console.log(actualizationName);
+    await redirectToIndexIfUserIsNotLoggedInAdmin();
+    let response;
+    try {
+        response = await fetch(`${appAddress}/users/${userId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: `{
+                "${fieldName}": "${fieldValue}"
+            }`
+        });
+    }
+    catch (err) {
+        alert(err);
+        console.error(`${err}`)
+    }
+    // console.log(response.statusText);
+    // let json = await response.json();
+    // console.log(JSON.stringify(json));
+    return response;
+}
 async function getAllUsersFromDatabase() {
-    alert(localStorage.getItem("access_token"));
+    // alert(localStorage.getItem("access_token"));
     let response;
     try {
         response = await fetch(`${appAddress}/users`, {
