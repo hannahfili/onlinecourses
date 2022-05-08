@@ -483,10 +483,11 @@ async function displayUsersOneByOne(response) {
         })(i);
     }
 
-    buttonToDeleteManyUsers.addEventListener('click', function () { deleteManyUsers(checkboxesElements) });
+    buttonToDeleteManyUsers.addEventListener('click', function (e) { deleteManyUsers(e, checkboxesElements) });
 
 }
-async function deleteManyUsers(checkboxesElements) {
+async function deleteManyUsers(e, checkboxesElements) {
+    e.preventDefault();
     let mainContainer = id("admin-users-all-users");
     let usersToDelete = "[";
     for (let key in checkboxesElements) {
@@ -552,15 +553,15 @@ async function deleteManyUsers(checkboxesElements) {
     }
 
 }
-function enableDisableButton(checkbox, buttonToDeleteManyUsers) {
+function enableDisableButton(checkbox, buttonToEnableOrDisable) {
     if (checkbox.checked) {
         numberOfBoxesChecked += 1;
-        buttonToDeleteManyUsers.classList.remove("disabled");
+        buttonToEnableOrDisable.classList.remove("disabled");
     }
     else {
         numberOfBoxesChecked -= 1;
         if (numberOfBoxesChecked < 1) {
-            buttonToDeleteManyUsers.classList.add("disabled");
+            buttonToEnableOrDisable.classList.add("disabled");
         }
     }
 }
@@ -624,8 +625,14 @@ async function redirectToIndexIfUserIsNotLoggedInAdmin() {
 }
 
 async function setEditUserDefaultFields() {
-    // await redirectToIndexIfUserIsNotLoggedInAdmin();
-
+    await redirectToIndexIfUserIsNotLoggedInAdmin();
+    //-------------JAK ZDAZYSZ TO TO POPRAW-----------------
+    // let returnButton = id("editUser-return-admin-users");
+    // returnButton.addEventListener('click', function (e) {
+    //     e.preventDefault;
+    //     window.location = "admin-users.html";
+    // })
+    //-----------------------------------------------------
     let firstName = localStorage.getItem("edit_user_firstName");
     let lastName = localStorage.getItem("edit_user_lastName");
     let email = localStorage.getItem("edit_user_email");
@@ -633,8 +640,6 @@ async function setEditUserDefaultFields() {
     let firstNameElement = nameGetter("edit-user-first-name");
     let lastNameElement = nameGetter("edit-user-last-name");
     let emailElement = nameGetter("edit-user-email");
-    // let passwordElementOne = nameGetter("edit-user-password");
-    // let passwordElementTwo = nameGetter("edit-user-password-2");
 
 
     firstName != "null" ? firstNameElement[0].placeholder = firstName : firstNameElement[0].placeholder = "";
@@ -948,20 +953,19 @@ async function displayAllCourses() {
             (async function (index) {
                 var course = coursesJson.data[index];
                 let name = course["name"];
-                // DODAĆ OPCJĘ WYŚWIETLANIA NAUCZYCIELI
+
                 let teachers = await getTeachersDataToDisplay(course["teacher"]);
                 let description = course["description"];
-
-
-
+                //utworzenie wiersza
                 const row = document.createElement('tr');
-
+                //utworzenie okienka na nazwę kursu
                 const courseBox = document.createElement('td');
                 courseBox.setAttribute('id', `course-details-name-${course["id"]}`);
                 courseBox.textContent = `${name}`;
                 row.appendChild(courseBox);
 
-                console.log(teachers);
+                // console.log(teachers);
+                //utworzenie okienka na nauczycieli
                 const teachersBox = document.createElement('td');
                 teachersBox.setAttribute('id', `course-details-teacher-${teachers[i]}`);
                 for (let i in teachers) {
@@ -973,76 +977,295 @@ async function displayAllCourses() {
                 }
                 row.appendChild(teachersBox);
 
+                //utworzenie okienka na przycisk do edycji kursu
+                const editBox = document.createElement('td');
+                editBox.setAttribute('id', `course-details-edit-${course["id"]}`);
+                const buttonEditCourse = document.createElement('button');
+                buttonEditCourse.setAttribute('id', `button-admin-courses-edit-course-${course["id"]}`);
+                buttonEditCourse.setAttribute('class', `btn btn-secondary`);
+                buttonEditCourse.textContent = "Edytuj kurs";
+                buttonEditCourse.addEventListener('click', function () { /*FUNKCJA DO EDYCJI KURSU*/ });
 
+                editBox.appendChild(buttonEditCourse);
+                row.appendChild(editBox);
+                //utworzenie okienka na przycisk do usuwania kursu
+                const deleteBox = document.createElement('td');
+                deleteBox.setAttribute('id', `course-details-delete-${course["id"]}`);
+                const buttonDeleteCourse = document.createElement('button');
+                buttonDeleteCourse.setAttribute('id', `button-admin-courses-delete-course-${course["id"]}`);
+                buttonDeleteCourse.setAttribute('class', `btn btn-secondary`);
+                buttonDeleteCourse.textContent = "Usuń kurs";
+                buttonDeleteCourse.addEventListener('click', function () { /*FUNKCJA DO USUWANIA KURSU*/ });
+
+                deleteBox.appendChild(buttonDeleteCourse);
+                row.appendChild(deleteBox);
+
+                //utworzenie okienka na przycisk do dodawania ucznia do kursu
+                const addStudentBox = document.createElement('td');
+                addStudentBox.setAttribute('id', `course-details-add-student-${course["id"]}`);
+                const buttonAddStudent = document.createElement('button');
+                buttonAddStudent.setAttribute('id', `button-admin-courses-add-student-${course["id"]}`);
+                buttonAddStudent.setAttribute('class', `btn btn-secondary`);
+                buttonAddStudent.textContent = "Dodaj uczniów";
+                buttonAddStudent.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    window.location = "addStudentsToCourse.html";
+                    localStorage.setItem("courseIdToAddStudents", course["id"]);
+                });
+
+                addStudentBox.appendChild(buttonAddStudent);
+                row.appendChild(addStudentBox);
+
+                //utworzenie okienka na przycisk do otworzenia szczegółów kursu
+                const showDetailsBox = document.createElement('td');
+                showDetailsBox.setAttribute('id', `course-details-show-details-${course["id"]}`);
+                const buttonShowDetails = document.createElement('button');
+                buttonShowDetails.setAttribute('id', `button-admin-courses-show-details-${course["id"]}`);
+                buttonShowDetails.setAttribute('class', `btn btn-secondary`);
+                buttonShowDetails.textContent = "Pokaż szczegóły";
+                buttonShowDetails.addEventListener('click', function () { /*FUNKCJA DO USUWANIA KURSU*/ });
+
+                showDetailsBox.appendChild(buttonShowDetails);
+                row.appendChild(showDetailsBox);
+
+                //utworzenie okienka na przycisk do aktywacji/dezaktywacji kursu
+                const activateDesactivateBox = document.createElement('td');
+                activateDesactivateBox.setAttribute('id', `course-details-activate-desactivate-${course["id"]}`);
+                const buttonActivateDesactivate = document.createElement('button');
+                buttonActivateDesactivate.setAttribute('id', `button-admin-courses-activate-desactivate-${course["id"]}`);
+                buttonActivateDesactivate.setAttribute('class', `btn btn-secondary`);
+                let enableOrDisable = "";
+                course["activity_status"] == "disabled" ? enableOrDisable = "Aktywuj" : enableOrDisable = "Dezaktywuj";
+                // if(course["activity_status"]=="disabled"){
+                //     enableOrDisable="Aktywuj kurs"
+                // }
+                // else{
+
+                // }
+                buttonActivateDesactivate.textContent = enableOrDisable;
+                buttonActivateDesactivate.addEventListener('click', function () { /*FUNKCJA DO (dez)    aktywacji KURSU*/ });
+
+                activateDesactivateBox.appendChild(buttonActivateDesactivate);
+                row.appendChild(activateDesactivateBox);
 
 
                 mainContainer.appendChild(row);
 
-                // const editBox = document.createElement('td');
-                // editBox.setAttribute('id', `user-details-editbox-user-${course["id"]}`);
 
-                // const buttonEditUser = document.createElement('button');
-                // buttonEditUser.setAttribute('id', `button-admin-users-edit-user-${course["id"]}`);
-                // buttonEditUser.setAttribute('class', `btn btn-secondary`);
-                // buttonEditUser.textContent = "Edytuj dane";
-                // buttonEditUser.addEventListener('click', function () { saveUserToEditAndRedirect(course) });
-                // editBox.appendChild(buttonEditUser);
-                // row.appendChild(editBox);
-
-                // const deleteBox = document.createElement('td');
-                // deleteBox.setAttribute('id', `user-details-deletebox-user-${course["id"]}`);
-
-                // const buttonDeleteUser = document.createElement('button');
-                // buttonDeleteUser.setAttribute('id', `button-admin-users-delete-user-${course["id"]}`);
-                // buttonDeleteUser.setAttribute('class', `btn btn-secondary`);
-                // buttonDeleteUser.textContent = "Usuń użytkownika";
-                // buttonDeleteUser.addEventListener('click', function () { deleteManager(course) });
-                // deleteBox.appendChild(buttonDeleteUser);
-                // row.appendChild(deleteBox);
-
-                // const roleBox = document.createElement('td');
-                // roleBox.setAttribute('id', `user-details-rolebox-user-${course["id"]}`);
-
-                // if (course["role"] != teacherRoleId) {
-                //     const buttonBestowTeacherRoleUponPerson = document.createElement('button');
-                //     buttonBestowTeacherRoleUponPerson.setAttribute('id', `button-admin-users-bestow-teacher-role-${course["id"]}`);
-                //     buttonBestowTeacherRoleUponPerson.setAttribute('class', `btn btn-secondary btn-success`);
-                //     buttonBestowTeacherRoleUponPerson.textContent = "Nadaj rolę nauczyciela";
-
-                //     buttonBestowTeacherRoleUponPerson.addEventListener('click', function () { updateUserData(course["id"], "role", teacherRoleId, "bestow teacher role") });
-                //     roleBox.appendChild(buttonBestowTeacherRoleUponPerson);
-                // }
-                // else {
-                //     const buttonCancelTeacherRoleUponPerson = document.createElement('button');
-                //     buttonCancelTeacherRoleUponPerson.setAttribute('id', `button-admin-users-cancel-teacher-role-${course["id"]}`);
-                //     buttonCancelTeacherRoleUponPerson.setAttribute('class', `btn btn-secondary`);
-                //     buttonCancelTeacherRoleUponPerson.textContent = "Odbierz rolę nauczyciela";
-
-                //     buttonCancelTeacherRoleUponPerson.addEventListener('click', function () { updateUserData(course["id"], "role", studentRoleId, "cancel teacher role") });
-                //     roleBox.appendChild(buttonCancelTeacherRoleUponPerson);
-                // }
-                // row.appendChild(roleBox);
-
-                // const checkboxBox = document.createElement('td');
-                // checkboxBox.setAttribute('id', `user-details-checkbox-user-${course["id"]}`);
-
-                // const checkbox = document.createElement('input');
-                // checkbox.setAttribute('id', `checkbox-admin-users-${course["id"]}`);
-                // checkbox.setAttribute('class', `form-check-input`);
-                // checkbox.setAttribute('type', 'checkbox');
-                // checkbox.addEventListener('click', function () { enableDisableButton(this, buttonToDeleteManyUsers) });
-                // checkboxesElements[`${course["id"]}`] = checkbox;
-                // checkboxBox.appendChild(checkbox);
-
-                // row.appendChild(checkboxBox);
-
-                // mainContainer.appendChild(row);
             })(i);
-            //dopisz - wyswietlanie kursów jak już dodasz chociaż jeden
+
+        }
+    }
+}
+function displayStudentsDetails(studentsDictionary, buttonToAddManyStudents) {
+    let errorContainer = id("addStudentsToCourse-error-place");
+    let mainContainer = id("addStudentsToCourse-students-not-assigned-to-this-course-display");
+    let checkboxesElements = {};
+    if (Object.keys(studentsDictionary).length == 0) errorContainer.textContent = "Brak uczniów, których można dodać do kursu";
+    console.log(Object.keys(studentsDictionary).length);
+    for (let key in studentsDictionary) {
+        const row = document.createElement('tr');
+
+        const emailBox = document.createElement('td');
+        emailBox.setAttribute('id', `addStudentsToCourse-email-${key}`);
+        emailBox.textContent = studentsDictionary[key][2];
+        row.appendChild(emailBox);
+
+        const first_nameBox = document.createElement('td');
+        first_nameBox.setAttribute('id', `addStudentsToCourse-first-name-${key}`);
+        first_nameBox.textContent = studentsDictionary[key][0];
+        row.appendChild(first_nameBox);
+
+        const last_nameBox = document.createElement('td');
+        last_nameBox.setAttribute('id', `addStudentsToCourse-last-name-${key}`);
+        last_nameBox.textContent = studentsDictionary[key][1];
+        row.appendChild(last_nameBox);
+
+        const checkboxBox = document.createElement('td');
+        checkboxBox.setAttribute('id', `addStudentsToCourse-checkbox-box-${key}`);
+
+        const checkbox = document.createElement('input');
+        checkbox.setAttribute('id', `addStudentsToCourse-checkbox-${key}`);
+        checkbox.setAttribute('class', `form-check-input`);
+        checkbox.setAttribute('type', 'checkbox');
+        checkbox.addEventListener('click', function () { enableDisableButton(this, buttonToAddManyStudents) });
+        checkboxesElements[key] = checkbox;
+        checkboxBox.appendChild(checkbox);
+
+        row.appendChild(checkboxBox);
+
+        mainContainer.appendChild(row);
+    }
+    return checkboxesElements;
+
+
+}
+async function addStudentsToCourse(courseId = localStorage.getItem("courseIdToAddStudents")) {
+
+    redirectToIndexIfUserIsNotLoggedInAdmin();
+    let buttonReturn = id("addStudentsToCourse-return-button");
+    let buttonToAddManyStudents = id("addStudentsToCourse-add-many-students");
+
+    let studentsWhoAreNotAssignedToTheCourseIDs = await getStudentsFromStudentsCoursesJunctionTable(courseId, false,);
+    console.log(studentsWhoAreNotAssignedToTheCourseIDs);
+    let checkboxesElements = displayStudentsDetails(studentsWhoAreNotAssignedToTheCourseIDs, buttonToAddManyStudents);
+
+    buttonToAddManyStudents.addEventListener('click', function (e) {
+        addManyStudentsToCourse(e, checkboxesElements, courseId);
+        // let studentsDetailsBasedOnIds = await getStudentsDetailsBasedOnIds(studentsWhoAreNotAssignedToTheCourseIDs);
+    });
+    buttonReturn.addEventListener('click', function (e) {
+        e.preventDefault();
+        window.location = "admin-courses.html";
+    })
+}
+const getStudentsChecked = function (studentsCheckboxesElements, courseId) {
+    return Object.entries(studentsCheckboxesElements).reduce((a, [k, v]) => {
+        if (v.checked) a.push({ "directus_users_id": k, "Courses_id": courseId });
+        return a;
+    }, []);
+}
+//DOKONCZYC DODAWANIE WIEKSZEJ LICZBY STUDENTOW DO KURSU
+async function addManyStudentsToCourse(e, studentsCheckboxesElements, courseId) {
+
+    e.preventDefault();
+    console.log(studentsCheckboxesElements);
+    let mainContainer = id("addStudentsToCourse-students-not-assigned-to-this-course");
+    let studentsToAddToCourse = "[";
+    for (let key in studentsCheckboxesElements) {
+        if (studentsCheckboxesElements[key].checked) {
+            console.log("dodac: ", key);
+            studentsToAddToCourse += '"';
+            studentsToAddToCourse += key;
+            studentsToAddToCourse += '"';
+            studentsToAddToCourse += ", ";
+        }
+    }
+    // let studentsChecked=Object.keys(studentsCheckboxesElements).reduce(function(studentsChecked, key)){
+    //     if(studentsCheckboxesElements[key].checked) studentsChecked.push(key);
+    // }
+    let studentsChecked = getStudentsChecked(studentsCheckboxesElements, courseId);
+    console.log(studentsChecked);
+    // studentsCheckboxesElements.forEach(function (box) {
+    //     if (box)
+    //         one_acc.userName = one_acc.owner.toLowerCase().split(' ').map(name => name[0]).join('');
+    // })
+    let removeLastCommaAndSpace = studentsToAddToCourse.slice(0, studentsToAddToCourse.length - 2);
+    let jsonUsersArray = removeLastCommaAndSpace += "]";
+    // console.log(jsonUsersArray);
+    // console.log(JSON.stringify(studentsChecked));
+    let dataToPost = JSON.stringify(studentsChecked);
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    id("addStudentsToCourse-students-not-assigned-to-this-course-table").remove();
+    id("addStudentsToCourse-add-many-students").remove();
+    try {
+
+        response = await fetch(`${appAddress}/items/junction_directus_users_Courses`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: dataToPost
+        });
+
+        if (response.ok) {
+
+            let success = document.createElement('div');
+            success.setAttribute('class', `success`);
+            success.setAttribute('id', `addStudentsToCourse-success-div`);
+            success.textContent = `Dodano zaznaczonych użytkowników`;
+            mainContainer.appendChild(success);
+        }
+        else {
+            responseNotOkayFound = true;
         }
 
-
     }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (errorOccured || responseNotOkayFound) {
+        let failure = document.createElement('div');
+        failure.setAttribute('class', `failure`);
+        failure.setAttribute('id', `addStudentsToCourse-failure-div`);
+        failure.textContent = `Nie udało się dodać zaznaczonych użytkowników`;
+        mainContainer.appendChild(failure);
+    }
+
+    let returnButton = document.createElement('button');
+    returnButton.setAttribute('id', 'addStudentsToCourse-return-button');
+    returnButton.addEventListener('click', function () { window.location = "admin-courses.html" });
+    returnButton.textContent = "Wróć do menadżera kursów";
+    mainContainer.appendChild(returnButton);
+}
+
+async function getAllItemsFromStudentsCoursesJunctionTable(containerForError) {
+    let response;
+    let errorCought = false;
+    try {
+        response = await fetch(`${appAddress}/items/junction_directus_users_Courses`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+    }
+    catch (err) {
+        // alert(err);
+        console.error(`${err}`);
+        errorCought = true;
+    }
+    let responseJson = [];
+    if (!response.ok || errorCought) {
+        containerForError.textContent = "Wystąpił problem z pobieraniem studentów";
+        return responseJson;
+    }
+    responseJson = response.json();
+    console.log(responseJson);
+    return responseJson;
+}
+async function getStudentsFromStudentsCoursesJunctionTable(courseId, getAssignedStudents = true, containerForError) {
+
+    let students = {};
+    let allItemsFromStudentsCoursesJunctionTable = await getAllItemsFromStudentsCoursesJunctionTable();
+    let allStudentsDictionary = await isolateParticularGroupOfUsersFromAllUsers(containerForError, studentRoleId,
+        "Problem z pobraniem studentów z serwera", "student");
+
+    let data = allItemsFromStudentsCoursesJunctionTable.data;
+    let studentsAssignedToThisCourse = [];
+    for (let i = 0; i < data.length; i++) {
+        let item = data[i];
+        if (item["Courses_id"] == courseId) studentsAssignedToThisCourse.push(item["directus_users_id"]);
+    }
+    if (data.length == 0) return allStudentsDictionary;
+    if (getAssignedStudents == true) { return studentsAssignedToThisCourse; }
+
+    if (studentsAssignedToThisCourse.length == 0) { console.log("nieprzypisano"); return allStudentsDictionary; }
+
+    let thisStudentsIsAssignedToThisCourse = false;
+
+    for (let key in allStudentsDictionary) {
+        let idFromStudentDictionary = key;
+        thisStudentsIsAssignedToThisCourse = false;
+        for (let i = 0; i < studentsAssignedToThisCourse.length; i++) {
+            let studentAssignedToThisCourseId = studentsAssignedToThisCourse[i];
+            if (idFromStudentDictionary == studentAssignedToThisCourseId) {
+                thisStudentsIsAssignedToThisCourse = true;
+                break;
+            }
+        }
+        if (thisStudentsIsAssignedToThisCourse == false) {
+            students[key] = allStudentsDictionary[key];
+        }
+    }
+
+    return students;
+
 }
 async function getAllCoursesFromDatabase() {
     let response;
@@ -1061,23 +1284,25 @@ async function getAllCoursesFromDatabase() {
     }
     return response;
 }
-async function isolateTeachersFromAllUsers(containerToDisplayError) {
+async function isolateParticularGroupOfUsersFromAllUsers(containerToDisplayError, roleId, infoToDisplay, typeOfIsolation) {
     let response = await getAllUsersFromDatabase();
     let responseJson = await response.json();
     if (!response.ok) {
-        containerToDisplayError.textContent = "Wystąpił problem z pobieraniem nauczycieli z serwera";
+        containerToDisplayError.textContent = infoToDisplay;
+        return {};
     }
     let users = responseJson.data;
-    let teachersDictionary = {};
+    let isolatedUsersDictionary = {};
 
     for (let i = 0; i < users.length; i++) {
         let obj = users[i];
-        if (obj["role"] == teacherRoleId) {
-            let teacherData = [obj["first_name"], obj["last_name"], obj["email"]];
-            teachersDictionary[obj["id"]] = teacherData;
+        if (obj["role"] == roleId) {
+            let userData = [obj["first_name"], obj["last_name"], obj["email"]];
+            isolatedUsersDictionary[obj["id"]] = userData;
         }
     }
-    return teachersDictionary;
+    console.log(isolatedUsersDictionary);
+    return isolatedUsersDictionary;
 }
 async function addCourseSetTeachersSelect(containerForSelect) {
     // for (key in localStorage) {
@@ -1087,7 +1312,8 @@ async function addCourseSetTeachersSelect(containerForSelect) {
     // }
     await redirectToIndexIfUserIsNotLoggedInAdmin();
 
-    let teachersDictionary = await isolateTeachersFromAllUsers(id("add-course-teacher-error"));
+    let teachersDictionary = await isolateParticularGroupOfUsersFromAllUsers(id("add-course-teacher-error"),
+        teacherRoleId, "Wystąpił problem z pobieraniem nauczycieli z serwera", "teachers");
 
     console.log(teachersDictionary);
     // let sectionOfteachers = id("add-course-teacher");
