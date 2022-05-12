@@ -9,6 +9,7 @@ let log_in_form = id("log-in-form");
 let edit_user_form = id("edit-user-form");
 let add_user_form = id("add-user-form");
 let add_course_form = id("add-course-form");
+let edit_course_form = id("edit-course-form");
 let checkboxesCount = 0;
 let numberOfBoxesChecked = 0;
 let numberToken = 1;
@@ -44,6 +45,11 @@ if (add_user_form) {
 if (add_course_form) {
     add_course_form.addEventListener("submit", function (e, mode) {
         courseManager(e, "addition");
+    });
+}
+if (edit_course_form) {
+    edit_course_form.addEventListener("submit", function (e, mode) {
+        courseManager(e, "edition");
     });
 }
 
@@ -187,7 +193,6 @@ async function registerManager(e) {
     }
 
 }
-
 
 function validateEmail(inputText, outputPlace) {
     var mailformat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
@@ -425,7 +430,7 @@ async function displayUsersOneByOne(response) {
             buttonEditUser.setAttribute('id', `button-admin-users-edit-user-${person["id"]}`);
             buttonEditUser.setAttribute('class', `btn btn-secondary`);
             buttonEditUser.textContent = "Edytuj dane";
-            buttonEditUser.addEventListener('click', function () { saveUserToEditAndRedirect(person) });
+            buttonEditUser.addEventListener('click', function (e) { e.preventDefault(); saveUserToEditAndRedirect(person) });
 
 
 
@@ -875,6 +880,7 @@ async function getTeachersDataToDisplay(course_directus_users_relation_ids) {
     console.log(teachersData);
     return teachersDataToDisplay;
 }
+
 async function getTeacherDataById(id) {
     let response;
     try {
@@ -984,7 +990,11 @@ async function displayAllCourses() {
                 buttonEditCourse.setAttribute('id', `button-admin-courses-edit-course-${course["id"]}`);
                 buttonEditCourse.setAttribute('class', `btn btn-secondary`);
                 buttonEditCourse.textContent = "Edytuj kurs";
-                buttonEditCourse.addEventListener('click', function () { /*FUNKCJA DO EDYCJI KURSU*/ });
+                buttonEditCourse.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    localStorage.setItem("courseIdEdit", course["id"]);
+                    window.location = "editCourse.html";
+                });
 
                 editBox.appendChild(buttonEditCourse);
                 row.appendChild(editBox);
@@ -1304,12 +1314,10 @@ async function isolateParticularGroupOfUsersFromAllUsers(containerToDisplayError
     console.log(isolatedUsersDictionary);
     return isolatedUsersDictionary;
 }
-async function addCourseSetTeachersSelect(containerForSelect) {
-    // for (key in localStorage) {
-    //     if (key.substring(0, 11) == 'new-select-') {
-    //         localStorage.removeItem(key);
-    //     }
-    // }
+async function addCourseSetTeachersSelect(containerForSelect, alreadyExistingTeachers) {
+    if (alreadyExistingTeachers == 3) {
+        return;
+    }
     await redirectToIndexIfUserIsNotLoggedInAdmin();
 
     let teachersDictionary = await isolateParticularGroupOfUsersFromAllUsers(id("add-course-teacher-error"),
@@ -1335,33 +1343,37 @@ async function addCourseSetTeachersSelect(containerForSelect) {
 
     }
 }
-async function selectAnotherTeacher() {
-    let mainContainer = id("add-course-teacher-selects");
+async function selectAnotherTeacher(alreadyExistingTeachers, mainContainerId, minorContainerId, prefix) {
+
+    let mainContainer = id(mainContainerId);
     let selectItemNumber = 0;
     let i = 0;
 
+    let containerToShowError = document.createElement("div");
+    containerToShowError.setAttribute("class", "error");
+    containerToShowError.setAttribute("id", "select-another-teacher-error");
+    containerToShowError.textContent = "Nie można dodać więcej niż 3 nauczycieli do kursu";
+
     while (true) {
-        if (id(`add-course-select-number-${i}`) == null) break;
+        if (id(`${minorContainerId}${i}`) == null) break;
         i++;
     }
 
     //nie pozwalamy na dodanie wiecej niz trzech nauczycieli do kursu
     selectItemNumber = i;
-    if (selectItemNumber < 2) {
+    if (selectItemNumber + alreadyExistingTeachers < 2) {
         let newSelectElement = document.createElement("select");
-        localStorage.setItem(`new-select-${selectItemNumber}`, "present");
-        newSelectElement.setAttribute('id', `add-course-select-number-${selectItemNumber}`);
+        // localStorage.setItem(`new-select-${selectItemNumber}`, "present");
+        newSelectElement.setAttribute('id', `${prefix}-select-number-${selectItemNumber}`);
         let br = document.createElement("br");
-        br.setAttribute('id', `add-course-select-number-${selectItemNumber}-br`);
+        br.setAttribute('id', `${prefix}-select-number-${selectItemNumber}-br`);
         mainContainer.appendChild(newSelectElement);
         mainContainer.appendChild(br);
 
         addCourseSetTeachersSelect(newSelectElement);
+        if (document.contains(containerToShowError)) mainContainer.removeChild(containerToShowError);
     }
     else {
-        let containerToShowError = document.createElement("div");
-        containerToShowError.setAttribute("class", "error");
-        containerToShowError.textContent = "Nie można dodać więcej niż 3 nauczycieli do kursu";
         mainContainer.appendChild(containerToShowError);
     }
 
@@ -1380,11 +1392,159 @@ function deleteAdditionalSelects() {
 const buttonAddAnotherSelectTeacher = id("add-course-add-select-for-another-teacher");
 buttonAddAnotherSelectTeacher.onclick = async (e) => {
     e.preventDefault();
-    await selectAnotherTeacher();
+    await selectAnotherTeacher(0, "add-course-teacher-selects", "add-course-select-number-", "add-course");
 };
-async function courseManager(e, mode) {
+async function editCourseSetDefaultValues(courseId = localStorage.getItem("courseIdEdit")) {
+
+    redirectToIndexIfUserIsNotLoggedInAdmin();
+
+    let teachersContainer = id("edit-course-teacher-selects");
+    let errorContainer = id("edit-course-all-error");
+    let courseDetails = await getCourseDetails(courseId, errorContainer);
+    let courseDetailsJson = await courseDetails.json();
+    let courseData = courseDetailsJson.data;
+    console.log(courseData);
+
+    let nameElement = nameGetter("edit-course-name");
+    nameElement[0].placeholder = courseData["name"];
+    let nameElementByID = id("edit-course-name");
+    nameElementByID.setAttribute('size', courseData["name"].length);
+
+    let maxStudentsCountElem = nameGetter("edit-course-maximum-students-count");
+    let maxStudents = courseData["maximum_students_count"];
+    maxStudents != null ? maxStudentsCountElem[0].placeholder = maxStudents : maxStudentsCountElem[0].placeholder = "";
+
+    let teachersIDs = await getCourseTeachersAndIdFromCourses_directus_usersTable(courseId);
+    let teachersNumber = Object.keys(teachersIDs).length;
+    let editCourseFirstSelect = id("edit-course-teacher-default");
+    addCourseSetTeachersSelect(editCourseFirstSelect, teachersNumber);
+
+    //pokaż nauczycieli przypisanych do kursu, których można usunąć
+    for (let key in teachersIDs) {
+        let idInCourses_directus_usersTable = key;
+        console.log(idInCourses_directus_usersTable);
+        let teacherId = teachersIDs[key];
+        let teacherNameSurnameOrEmail = await getTeacherDataById(teacherId);
+        console.log(teacherNameSurnameOrEmail);
+        //utworz diva z danymi nauczyciela
+        let teacherBox = document.createElement('div');
+        teacherBox.setAttribute('id', `edit-course-teacher-name-or-surname-${teacherId}`);
+        teacherBox.setAttribute('class', `edit-course-teacher-div`);
+        teacherBox.textContent = teacherNameSurnameOrEmail;
+        //utworz krzyzyk do usuwania juz istniejacych nauczycieli
+        let Xbox = document.createElement('button');
+        Xbox.setAttribute('id', `edit-course-teacher-${teacherId}-xbox`);
+        Xbox.textContent = "X";
+        Xbox.addEventListener('click', async function (e, id = idInCourses_directus_usersTable, err = errorContainer) {
+            e.preventDefault();
+            let deleted = await deleteTeacherFromCourse(id, err, "Nie udało się usunąć wybranego nauczyciela");
+            if (deleted) {
+                teacherBox.remove();
+                teachersNumber -= 1;
+                if (document.contains(document.getElementById("select-another-teacher-error"))) {
+                    document.getElementById("select-another-teacher-error").remove();
+                }
+                addCourseSetTeachersSelect(editCourseFirstSelect, teachersNumber);
+            }
+        })
+        teacherBox.appendChild(Xbox);
+        teachersContainer.appendChild(teacherBox);
+
+    }
+    let buttonAddAnotherSelectTeacher = id("edit-course-add-select-for-another-teacher");
+    buttonAddAnotherSelectTeacher.onclick = async (e) => {
+        e.preventDefault();
+        await selectAnotherTeacher(teachersNumber, teachersContainer.getAttribute('id'), "edit-course-select-number-", "edit-course");
+    };
+
+
+
+}
+async function deleteTeacherFromCourse(itemId, errorContainer, errorMessage) {
+    console.log("usuwamy", itemId);
+    let response;
+    let errorOccured = false;
+
+    try {
+        response = await fetch(`${appAddress}/items/Courses_directus_users/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (!response.ok || errorOccured) {
+        errorContainer.textContent = errorMessage;
+        return false;
+    }
+
+    return true;
+}
+async function getCourseTeachersAndIdFromCourses_directus_usersTable(courseId) {
+    let errorContainer = id("edit-course-teacher-error");
+    let courses = await getAllItemsFromCourses_directus_usersRelationship(errorContainer);
+    let coursesJson = await courses.json();
+    let thisCourseData = coursesJson.data.filter(n => n.Courses_id == courseId);
+    let thisCourseTeachersIDs = {};
+    thisCourseData.forEach(function (teacher) {
+        thisCourseTeachersIDs[teacher.id] = teacher.directus_users_id;
+    });
+    return thisCourseTeachersIDs;
+
+}
+async function getAllItemsFromCourses_directus_usersRelationship(errorContainer) {
+    let response;
+    let errorOccured = false;
+
+    try {
+        response = await fetch(`${appAddress}/items/Courses_directus_users`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (!response.ok || errorOccured) {
+        errorContainer.textContent = `Nie udało się pobrać nauczycieli przypisanych do kursu`;
+    }
+
+    return response;
+
+
+}
+async function getCourseDetails(courseId, errorContainer) {
+    let response;
+    try {
+        response = await fetch(`${appAddress}/items/Courses/${courseId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
+    }
+    if (!response.ok) errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
+
+    return response;
+}
+async function courseManager(e, mode, courseId = localStorage.getItem("courseIdEdit")) {
 
     e.preventDefault();
+    console.log(mode);
     await redirectToIndexIfUserIsNotLoggedInAdmin();
 
     if (mode == "edition") prefix = "edit";
@@ -1396,34 +1556,48 @@ async function courseManager(e, mode) {
     let courseNameElement = id(`${prefix}-course-name`);
     let courseDescriptionElement = id(`${prefix}-course-description`);
     let courseMaximumStudentsCountElement = id(`${prefix}-course-maximum-students-count`);
-    let mainContainer = id("add-course-main-container");
+    let mainContainer = id(`${prefix}-course-main-container`);
 
     let courseTeacherElementDefault = id(`${prefix}-course-teacher-default`);
-    let manyTeachersIds = [];
-    manyTeachersIds.push(courseTeacherElementDefault.value);
+    let teachersIdsFromSelects = [];
+    teachersIdsFromSelects.push(courseTeacherElementDefault.value);
 
     let i = 0;
+    let theSameTeacherSelectedMoreThanOnce = false;
     while (true) {
-        if (id(`add-course-select-number-${i}`) == null) break;
+        if (id(`${prefix}-course-select-number-${i}`) == null) break;
         else {
-            manyTeachersIds.push(id(`add-course-select-number-${i}`).value);
+            teachersIdsFromSelects.push(id(`${prefix}-course-select-number-${i}`).value);
         };
         i++;
     }
-    console.log(manyTeachersIds);
-    let theSameTeacherSelectedMoreThanOnce = false;
-    for (let i = 0; i < manyTeachersIds.length; i++) {
-        for (let k = i + 1; k < manyTeachersIds.length; k++) {
-            if (manyTeachersIds[i] == manyTeachersIds[k]) {
-                theSameTeacherSelectedMoreThanOnce = true;
-                break;
+    if (mode == "edition") {
+        let teachersIdsFromDivs = document.getElementsByClassName("edit-course-teacher-div");
+        for (let i = 0; i < teachersIdsFromSelects.length; i++) {
+            for (let k = 0; k < teachersIdsFromDivs.length; k++) {
+                console.log(teachersIdsFromDivs[k].getAttribute('id'));
+                if (teachersIdsFromSelects[i] == teachersIdsFromDivs[k].getAttribute('id').substring(36)) {
+                    theSameTeacherSelectedMoreThanOnce = true;
+                    break;
+                }
             }
         }
     }
+    if (!theSameTeacherSelectedMoreThanOnce) {
+        for (let i = 0; i < teachersIdsFromSelects.length; i++) {
+            for (let k = i + 1; k < teachersIdsFromSelects.length; k++) {
+                if (teachersIdsFromSelects[i] == teachersIdsFromSelects[k]) {
+                    theSameTeacherSelectedMoreThanOnce = true;
+                    break;
+                }
+            }
+        }
+    }
+
     if (theSameTeacherSelectedMoreThanOnce) {
         let failure = document.createElement('div');
-        failure.setAttribute('class', `failure`);
-        failure.setAttribute('id', `create-course-failure-div`);
+        failure.setAttribute('class', `failure error`);
+        failure.setAttribute('id', `${prefix}-course-failure-div`);
         failure.textContent = `Nie można dodać tego samego nauczyciela do kursu więcej niż raz`;
         mainContainer.appendChild(failure);
         deleteAdditionalSelects();
@@ -1433,25 +1607,28 @@ async function courseManager(e, mode) {
     // console.log(courseTeacherElement.value)
     // console.log(courseDescriptionElement.value)
     // console.log(courseMaximumStudentsCountElement.value)
+    if (mode == "addition") {
+        let lastCourseId = await getLastCourseIdFromDatabase();
+        let thisCourseId = lastCourseId + 1;
 
+        let valuesToCreateCourse = {
+            "id": thisCourseId,
+            "name": courseNameElement.value,
+            "description": courseDescriptionElement.value,
+            "maximum_students_count": courseMaximumStudentsCountElement.value,
+            "activity_status": "disabled"
+        };
+        await addCourse(valuesToCreateCourse, mainContainer, teachersIdsFromSelects, thisCourseId);
+    }
+}
+async function addCourse(valuesToCreateCourse, mainContainer, teachersIdsFromSelects, thisCourseId) {
 
-
-    let lastCourseId = await getLastCourseIdFromDatabase();
-    let thisCourseId = lastCourseId + 1;
-
-    let valuesToCreateCourse = {
-        "id": thisCourseId,
-        "name": courseNameElement.value,
-        "description": courseDescriptionElement.value,
-        "maximum_students_count": courseMaximumStudentsCountElement.value,
-        "activity_status": "disabled"
-    };
     let valuesToCreateCourseJson = JSON.stringify(valuesToCreateCourse);
 
     let response1 = await addCourseToDatabase(valuesToCreateCourseJson, mainContainer);
     let responses = [];
     let responseNotOkayFound = false;
-    manyTeachersIds.forEach(async id => {
+    teachersIdsFromSelects.forEach(async id => {
         console.log('hello');
         console.log(id);
         let response2 = await addTeacherDatabaseManyToManyManager(id, thisCourseId, mainContainer);
@@ -1465,14 +1642,14 @@ async function courseManager(e, mode) {
     if (response1.ok && (!responseNotOkayFound) && thisCourseId > 0) {
         let success = document.createElement('div');
         success.setAttribute('class', `success`);
-        success.setAttribute('id', `create-course-success-div`);
+        success.setAttribute('id', `add-course-success-div`);
         success.textContent = `Dodano kurs`;
         mainContainer.appendChild(success);
     }
     else {
         let failure = document.createElement('div');
         failure.setAttribute('class', `failure`);
-        failure.setAttribute('id', `create-course-failure-div`);
+        failure.setAttribute('id', `add-course-failure-div`);
         failure.textContent = `Nie udało się dodać kursu`;
         mainContainer.appendChild(failure);
     }
