@@ -11,7 +11,26 @@
     <title>Dodaj studentów do kursu</title>
 </head>
 
-<body onload="addStudentsToCourse()">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="#">Użytkownicy</a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <button class="btn btn-outline-warning"
+                        id="addStudentsToCourse-course-maximum-students-count"></button>
+                    <!-- <div id="addStudentsToCourse-course-maximum-students-count"></div> -->
+                </li>
+            </ul>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <button class="btn btn-outline-success"
+                        id="addStudentsToCourse-course-current-students-count"></button>
+                    <!-- <div id="addStudentsToCourse-course-current-students-count"></div> -->
+                </li>
+            </ul>
+        </div>
+    </nav>
     <div id="addStudentsToCourse-students-not-assigned-to-this-course" class="table-responsive">
         <table id="addStudentsToCourse-students-not-assigned-to-this-course-table" class="table table-hover">
             <thead>
@@ -35,7 +54,7 @@
     </div>
     <button class="btn btn-outline-success" id="addStudentsToCourse-return-button">Powrót do managera
         kursów</button>
-    <script src="script.js"></script>
+    <script type="module" src="add-students-to-course-script.js"></script>
 </body>
 
 </html>
