@@ -402,7 +402,6 @@ async function displayAllUsers() {
         alert('Problem z wczytaniem użytkowników!');
         console.log("error");
     }
-
 }
 async function displayUsersOneByOne(response) {
     var mainContainer = id("admin-users-all-users-table-display");
