@@ -59,7 +59,7 @@ async function displayAllCourses() {
                     let text = document.createTextNode(`${teachers[i]}`);
                     teachersBox.appendChild(text);
                     let comma = document.createTextNode(", ");
-                    console.log(i);
+                    // console.log(i);
                     if (i != teachers.length - 1) teachersBox.appendChild(comma);
                 }
                 row.appendChild(teachersBox);
@@ -86,7 +86,7 @@ async function displayAllCourses() {
                 buttonDeleteCourse.setAttribute('id', `button-admin-courses-delete-course-${course["id"]}`);
                 buttonDeleteCourse.setAttribute('class', `btn btn-secondary`);
                 buttonDeleteCourse.textContent = "Usuń kurs";
-                buttonDeleteCourse.addEventListener('click', function () { /*FUNKCJA DO USUWANIA KURSU*/ });
+                buttonDeleteCourse.addEventListener('click', async function () { await deleteCourseManager(course); });
 
                 deleteBox.appendChild(buttonDeleteCourse);
                 row.appendChild(deleteBox);
@@ -148,11 +148,51 @@ async function displayAllCourses() {
         }
     }
 }
+async function deleteCourseManager(course) {
+    console.log(course["id"]);
+    console.log(course["name"]);
+    let courseId = course["id"];
+    let courseName = course["name"];
+    let confirmed = window.confirm(`Czy na pewno chcesz usunąć kurs: ${courseName}?`);
+    let courseDeleted = false;
+    let message;
+    if (confirmed) {
+        courseDeleted = await deleteCourseFromDatabase(courseId);
+        if (courseDeleted) message = `Usunięto kurs: ${courseName}`;
+        else message = "Nastąpił problem przy usuwaniu kursu";
+    }
+    else {
+        message = `Kurs ${courseName} nie został usunięty`;
+    }
+    alert(message);
+    if (confirmed) document.location.reload();
+}
+async function deleteCourseFromDatabase(courseId) {
+    let response;
+    let responseNotOkayFound = false;
+    let errorOccured = false;
+    try {
+        response = await fetch(`${appAddress}/items/Courses/${courseId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (responseNotOkayFound || errorOccured) return false;
+    return true;
+}
 
 async function getTeachersDataToDisplay(course_directus_users_relation_ids) {
     let teachersData = {};
     let teachersDataToDisplay = [];
-    console.log(course_directus_users_relation_ids);
+    // console.log(course_directus_users_relation_ids);
     for (let number in course_directus_users_relation_ids) {
         console.log(number);
         teachersData[course_directus_users_relation_ids[number]] = await getTeacherIdFromCourseDirectusUsersRelation(course_directus_users_relation_ids[number]);
