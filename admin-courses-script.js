@@ -100,8 +100,8 @@ async function displayAllCourses() {
                 buttonAddStudent.textContent = "Dodaj uczniów";
                 buttonAddStudent.addEventListener('click', function (e) {
                     e.preventDefault();
-                    window.location = "addStudentsToCourse.html";
                     localStorage.setItem("courseIdToAddStudents", course["id"]);
+                    window.location = "addStudentsToCourse.html";
                 });
 
                 addStudentBox.appendChild(buttonAddStudent);
@@ -114,7 +114,10 @@ async function displayAllCourses() {
                 buttonShowDetails.setAttribute('id', `button-admin-courses-show-details-${course["id"]}`);
                 buttonShowDetails.setAttribute('class', `btn btn-secondary`);
                 buttonShowDetails.textContent = "Pokaż szczegóły";
-                buttonShowDetails.addEventListener('click', function () { /*FUNKCJA DO USUWANIA KURSU*/ });
+                buttonShowDetails.addEventListener('click', function () {
+                    localStorage.setItem("courseIdToShowDetails", course["id"]);
+                    window.location = "course-details.html";
+                });
 
                 showDetailsBox.appendChild(buttonShowDetails);
                 row.appendChild(showDetailsBox);

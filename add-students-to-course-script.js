@@ -2,7 +2,7 @@ import {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers
+    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails, getStudentsFromStudentsCoursesJunctionTable
 } from './general-script.js';
 
 window.onload = (async function () {
@@ -15,8 +15,8 @@ async function addStudentsToCourse(courseId = localStorage.getItem("courseIdToAd
     redirectToIndexIfUserIsNotLoggedInAdmin();
     let buttonReturn = id("addStudentsToCourse-return-button");
     let buttonToAddManyStudents = id("addStudentsToCourse-add-many-students");
-
-    let studentsWhoAreNotAssignedToTheCourseIDs = await getStudentsFromStudentsCoursesJunctionTable(courseId, false,);
+    let errorContainer = id("addStudentsToCourse-error-place");
+    let studentsWhoAreNotAssignedToTheCourseIDs = await getStudentsFromStudentsCoursesJunctionTable(courseId, false, errorContainer);
     console.log(studentsWhoAreNotAssignedToTheCourseIDs);
     let checkboxesElements = displayStudentsDetails(studentsWhoAreNotAssignedToTheCourseIDs, buttonToAddManyStudents);
     let maximumStudentsCountElement = id("addStudentsToCourse-course-maximum-students-count");
@@ -84,76 +84,19 @@ async function getCourseFeatureById(courseId, featureName) {
     return data[featureName];
 
 }
-async function getStudentsFromStudentsCoursesJunctionTable(courseId, getAssignedStudents = true, containerForError) {
 
-    let students = {};
-    let allItemsFromStudentsCoursesJunctionTable = await getAllItemsFromStudentsCoursesJunctionTable();
-    let allStudentsDictionary = await isolateParticularGroupOfUsersFromAllUsers(containerForError, studentRoleId,
-        "Problem z pobraniem studentów z serwera", "student");
 
-    let data = allItemsFromStudentsCoursesJunctionTable.data;
-    let studentsAssignedToThisCourse = [];
-    for (let i = 0; i < data.length; i++) {
-        let item = data[i];
-        if (item["Courses_id"] == courseId) studentsAssignedToThisCourse.push(item["directus_users_id"]);
-    }
-    if (data.length == 0) return allStudentsDictionary;
-    if (getAssignedStudents == true) { return studentsAssignedToThisCourse; }
 
-    if (studentsAssignedToThisCourse.length == 0) { console.log("nieprzypisano"); return allStudentsDictionary; }
-
-    let thisStudentsIsAssignedToThisCourse = false;
-
-    for (let key in allStudentsDictionary) {
-        let idFromStudentDictionary = key;
-        thisStudentsIsAssignedToThisCourse = false;
-        for (let i = 0; i < studentsAssignedToThisCourse.length; i++) {
-            let studentAssignedToThisCourseId = studentsAssignedToThisCourse[i];
-            if (idFromStudentDictionary == studentAssignedToThisCourseId) {
-                thisStudentsIsAssignedToThisCourse = true;
-                break;
-            }
-        }
-        if (thisStudentsIsAssignedToThisCourse == false) {
-            students[key] = allStudentsDictionary[key];
-        }
-    }
-
-    return students;
-
-}
-
-async function getAllItemsFromStudentsCoursesJunctionTable(containerForError) {
-    let response;
-    let errorCought = false;
-    try {
-        response = await fetch(`${appAddress}/items/junction_directus_users_Courses`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            }
-        });
-    }
-    catch (err) {
-        // alert(err);
-        console.error(`${err}`);
-        errorCought = true;
-    }
-    let responseJson = [];
-    if (!response.ok || errorCought) {
-        containerForError.textContent = "Wystąpił problem z pobieraniem studentów";
-        return responseJson;
-    }
-    responseJson = await response.json();
-    console.log(responseJson);
-    return responseJson;
-}
 function displayStudentsDetails(studentsDictionary, buttonToAddManyStudents) {
     let errorContainer = id("addStudentsToCourse-error-place");
     let mainContainer = id("addStudentsToCourse-students-not-assigned-to-this-course-display");
     let checkboxesElements = {};
-    if (Object.keys(studentsDictionary).length == 0) errorContainer.textContent = "Brak uczniów, których można dodać do kursu";
+    if (Object.keys(studentsDictionary).length == 0) {
+        const text = document.createTextNode("Brak uczniów, których można dodać do kursu");
+        const br = document.createElement("br");
+        errorContainer.appendChild(br);
+        errorContainer.appendChild(text);
+    }
     console.log(Object.keys(studentsDictionary).length);
     for (let key in studentsDictionary) {
         const row = document.createElement('tr');

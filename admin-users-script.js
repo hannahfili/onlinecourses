@@ -156,7 +156,7 @@ async function deleteManager(person) {
     let confirmed = confirmDeletion(person);
     let message;
     if (confirmed) {
-        await deleteFromDatabase(userId);
+        await deleteUserFromDatabase(userId);
         message = `Usunięto użytkownika: ${person["email"]}`;
     }
     else {
@@ -172,7 +172,7 @@ function confirmDeletion(user) {
     return answer;
 }
 
-async function deleteFromDatabase(userId) {
+async function deleteUserFromDatabase(userId) {
     let response;
     try {
         response = await fetch(`${appAddress}/users/${userId}`, {
