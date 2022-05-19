@@ -2,7 +2,7 @@ import {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase
+    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails, updateCourse
 } from './general-script.js';
 
 //------------------------------------------------------
@@ -242,12 +242,12 @@ async function editCourseManager(courseId, valuesToEditCourse, teachersIdsFromSe
     for (let key in valuesToEditCourse) {
         console.log(key, valuesToEditCourse[key]);
         if ((valuesToEditCourse[key] != "")) {
-            let response = await updateCourse(courseId, key, valuesToEditCourse[key], key);
-            updateResponses.push(response);
+            let responseBoolean = await updateCourse(courseId, key, valuesToEditCourse[key], key);
+            updateResponses.push(responseBoolean);
         }
     }
     edit_course_form.remove();
-    let errorUpdateResponses = updateResponses.filter((response) => !response.ok);
+    let errorUpdateResponses = updateResponses.filter((response) => !response);
 
     if (errorUpdateResponses.length == 0) {
         let success = document.createElement('div');
@@ -283,28 +283,7 @@ async function getLastIdFromCourses_directus_users_Database(errorContainer) {
     return lastId;
 
 }
-async function updateCourse(courseId, fieldName, fieldValue, actualizationName) {
-    console.log(actualizationName);
-    await redirectToIndexIfUserIsNotLoggedInAdmin();
-    let response;
-    try {
-        response = await fetch(`${appAddress}/items/Courses/${courseId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            },
-            body: `{
-                "${fieldName}": "${fieldValue}"
-            }`
-        });
-    }
-    catch (err) {
-        alert(err);
-        console.error(`${err}`)
-    }
-    return response;
-}
+
 async function addCourse(valuesToCreateCourse, mainContainer, teachersIdsFromSelects, thisCourseId) {
 
     let valuesToCreateCourseJson = JSON.stringify(valuesToCreateCourse);
@@ -479,25 +458,7 @@ async function editCourseSetDefaultValues(courseId = localStorage.getItem("cours
         await selectAnotherTeacher(teachersNumber, teachersContainer.getAttribute('id'), "edit-course-select-number-", "edit-course");
     };
 }
-async function getCourseDetails(courseId, errorContainer) {
-    let response;
-    try {
-        response = await fetch(`${appAddress}/items/Courses/${courseId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            }
-        });
-    }
-    catch (err) {
-        console.error(`${err}`);
-        errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
-    }
-    if (!response.ok) errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
 
-    return response;
-}
 async function getCourseTeachersAndIdFromCourses_directus_usersTable(courseId) {
     let errorContainer = id("edit-course-teacher-error");
     let courses = await getAllItemsFromCourses_directus_usersRelationship(errorContainer);

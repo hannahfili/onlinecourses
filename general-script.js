@@ -179,7 +179,7 @@ async function isolateParticularGroupOfUsersFromAllUsers(containerToDisplayError
             isolatedUsersDictionary[obj["id"]] = userData;
         }
     }
-    console.log(isolatedUsersDictionary);
+    // console.log(isolatedUsersDictionary);
     return isolatedUsersDictionary;
 }
 async function getAllCoursesFromDatabase() {
@@ -198,9 +198,142 @@ async function getAllCoursesFromDatabase() {
     }
     return response;
 }
+async function getAllItemsFromStudentsCoursesJunctionTable(containerForError) {
+    let response;
+    let errorCought = false;
+    try {
+        response = await fetch(`${appAddress}/items/junction_directus_users_Courses`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+    }
+    catch (err) {
+        // alert(err);
+        console.error(`${err}`);
+        errorCought = true;
+    }
+    let responseJson = [];
+    if (!response.ok || errorCought) {
+        containerForError.textContent = "Wystąpił problem z pobieraniem studentów";
+        return responseJson;
+    }
+    responseJson = await response.json();
+    // console.log(responseJson);
+    return responseJson;
+}
+function getStudentsAssigned(allStudentsDictionary, studentsAssignedToThisCourse) {
+    let studentsAssignedToThisCourseDict = {};
+    for (let key in allStudentsDictionary) {
+        let idFromStudentDictionary = key;
+        for (let i = 0; i < studentsAssignedToThisCourse.length; i++) {
+            let studentAssignedToThisCourseId = studentsAssignedToThisCourse[i];
+            if (idFromStudentDictionary == studentAssignedToThisCourseId) {
+                studentsAssignedToThisCourseDict[key] = allStudentsDictionary[key];
+            }
+        }
+    }
+    return studentsAssignedToThisCourseDict;
+}
+function getStudentsNotAssigned(allStudentsDictionary, studentsAssignedToThisCourse) {
+    let thisStudentsIsAssignedToThisCourse = false;
+    let students = {};
+
+    for (let key in allStudentsDictionary) {
+        let idFromStudentDictionary = key;
+        thisStudentsIsAssignedToThisCourse = false;
+        for (let i = 0; i < studentsAssignedToThisCourse.length; i++) {
+            let studentAssignedToThisCourseId = studentsAssignedToThisCourse[i];
+            if (idFromStudentDictionary == studentAssignedToThisCourseId) {
+                thisStudentsIsAssignedToThisCourse = true;
+                break;
+            }
+        }
+        if (thisStudentsIsAssignedToThisCourse == false) {
+            students[key] = allStudentsDictionary[key];
+        }
+    }
+
+    return students;
+}
+async function updateCourse(courseId, fieldName, fieldValue, actualizationName) {
+    await redirectToIndexIfUserIsNotLoggedInAdmin();
+    let response;
+    let responseNotOkayFound = false;
+    let errorOccured = false;
+    try {
+        response = await fetch(`${appAddress}/items/Courses/${courseId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: `{
+                "${fieldName}": "${fieldValue}"
+            }`
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        errorOccured = true;
+        console.error(`${err}`);
+    }
+    if (responseNotOkayFound || errorOccured) return false;
+    return true;
+}
+async function getStudentsFromStudentsCoursesJunctionTable(courseId, getAssignedStudents = true, containerForError) {
+
+
+    let allItemsFromStudentsCoursesJunctionTable = await getAllItemsFromStudentsCoursesJunctionTable(containerForError);
+    let allStudentsDictionary = await isolateParticularGroupOfUsersFromAllUsers(containerForError, studentRoleId,
+        "Problem z pobraniem studentów z serwera", "student");
+
+    let data = allItemsFromStudentsCoursesJunctionTable.data;
+    let studentsAssignedToThisCourse = [];
+    for (let i = 0; i < data.length; i++) {
+        let item = data[i];
+        // console.log(item["directus_users_id"]);
+        if (item["Courses_id"] == courseId) studentsAssignedToThisCourse.push(item["directus_users_id"]);
+    }
+    console.log(studentsAssignedToThisCourse);
+
+    if (getAssignedStudents == true) {
+        if (studentsAssignedToThisCourse.length == 0) { return null; }
+        return getStudentsAssigned(allStudentsDictionary, studentsAssignedToThisCourse);
+    }
+    else {
+        if (data.length == 0) return allStudentsDictionary;
+        return getStudentsNotAssigned(allStudentsDictionary, studentsAssignedToThisCourse);
+    }
+
+}
+
+async function getCourseDetails(courseId, errorContainer) {
+    let response;
+    try {
+        response = await fetch(`${appAddress}/items/Courses/${courseId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
+    }
+    if (!response.ok) errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
+
+    return response;
+}
 export {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase
+    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
+    getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
+    updateCourse
 };
