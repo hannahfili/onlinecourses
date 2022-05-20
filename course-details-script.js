@@ -47,7 +47,7 @@ async function displayDetails(courseId = localStorage.getItem("courseIdToShowDet
         id("course-details-checkbox-options").remove();
     }
     let moduleContainerToDisplay = id("course-details-all-modules");
-    let modulesNumber = await displayAllModules(courseId, moduleContainerToDisplay, errorContainerForDisplayingModules);
+    await displayAllModules(courseId, moduleContainerToDisplay, errorContainerForDisplayingModules);
 
 }
 async function displayAllModules(courseId, containerToDisplay, containerForError) {
@@ -58,8 +58,142 @@ async function displayAllModules(courseId, containerToDisplay, containerForError
         return;
     }
 
+    let tableForModules = document.createElement("table");
+    tableForModules.setAttribute("id", "course-details-table");
+    tableForModules.setAttribute("class", "table table-hover");
+
+    let tbody = document.createElement("tbody");
+    tbody.setAttribute("id", "course-details-tbody");
+
+
+    for (let key in modulesAssignedToThisCourse) {
+        const row = document.createElement('tr');
+        //utworzenie okienka na nazwę kursu
+        const tdForItem = document.createElement('td');
+        tdForItem.setAttribute('id', `course-details-module-${key}`);
+        // tdForItem.textContent = modulesAssignedToThisCourse[key]["name"];
+
+        
+        await displaySectionsWithCollapseManager(modulesAssignedToThisCourse[key], tdForItem);
+
+        // const collapseItem=document.createElement("a");
+        // collapseItem.setAttribute("class", "btn btn-primary");
+        // collapseItem.setAttribute("class", "btn btn-primary");
+        // collapseItem.setAttribute("class", "btn btn-primary");
+        // collapseItem.setAttribute("class", "btn btn-primary");
+        // collapseItem.setAttribute("class", "btn btn-primary");
+        // collapseItem.setAttribute("class", "btn btn-primary");
+
+
+
+
+
+
+        row.appendChild(tdForItem);
+        tbody.appendChild(row);
+    }
+
+    tableForModules.appendChild(tbody);
+    containerToDisplay.appendChild(tableForModules);
+
 
     console.log(modulesAssignedToThisCourse);
+}
+async function displaySectionsWithCollapseManager(moduleElement, mainContainer) {
+
+    let pForCollapse=document.createElement("p");
+    let aForCollapse=document.createElement("a");
+    aForCollapse.setAttribute("class", "btn btn-primary");
+    aForCollapse.setAttribute("data-bs-toggle", "collapse");
+    aForCollapse.setAttribute("href", "#moduleSections");
+    aForCollapse.setAttribute("role", "button");
+    aForCollapse.setAttribute("aria-expanded", "false");
+    aForCollapse.setAttribute("aria-controls", "moduleSections");
+    aForCollapse.textContent=moduleElement["name"];
+
+    pForCollapse.appendChild(aForCollapse);
+
+    let divForCollapes=document.createElement("div");
+    divForCollapes.setAttribute("class", "collapse");
+    divForCollapes.setAttribute("id", "moduleSections");
+
+    let divForCard=document.createElement("div");
+    divForCard.setAttribute("class", "card card-body");
+    const errorContainerForDisplayingSections=document.createElement("div");
+    errorContainerForDisplayingSections.setAttribute("id", `course-details-error-container-module-${moduleElement["id"]}-sections`);
+
+
+    let sectionsAssignedToThisModule=await getSectionsAssignedToTheModule(moduleElement["id"], errorContainerForDisplayingSections);
+    console.log(sectionsAssignedToThisModule);
+    if(sectionsAssignedToThisModule==null) mainContainer.textContent="Brak sekcji dla danego modułu";
+
+    for(let i=0; i<sectionsAssignedToThisModule.length; i++){
+        let section=sectionsAssignedToThisModule[i];
+        let sectionId=section["id"];
+        console.log(section);
+
+        let divForSection=document.createElement("div");
+        divForSection.setAttribute("id", `course-details-module-${moduleElement}-section-${sectionId}`);
+        divForSection.textContent=section["name"];
+        
+        divForCard.appendChild(divForSection);
+    }
+
+    // <p>
+    //     <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
+    //       Link with href
+    //     </a>
+    //   </p>
+    //   <div class="collapse" id="collapseExample">
+    //     <div class="card card-body">
+    //       Some placeholder content for the collapse component. This panel is hidden by default but revealed when the user activates the relevant trigger.
+    //     </div>
+    //   </div>
+
+    mainContainer.appendChild(pForCollapse);
+    mainContainer.appendChild(divForCollapes);
+
+}
+async function getSectionsAssignedToTheModule(moduleId, containerForError) {
+    let allSections = await getAllSections();
+    
+    if (allSections == null) {
+        containerForError.textContent = "Wystąpił problem z pobraniem sekcji należących do kursu";
+        return null;
+    }
+    let allSectionsJson = await allSections.json();
+    let data = allSectionsJson.data;
+    if (Object.keys(data).length === 0) return null;
+    let sectionsAssignedToThisModule = [];
+    for (let i = 0; i < data.length; i++) {
+        let item = data[i];
+        if (item["module"] == moduleId) sectionsAssignedToThisModule.push(item);
+    }
+    return sectionsAssignedToThisModule;
+}
+async function getAllSections() {
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    try {
+
+        response = await fetch(`${appAddress}/items/Sections`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+        if (!response.ok) responseNotOkayFound = true;
+
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    console.log(response.statusText);
+    if (errorOccured || responseNotOkayFound) return null;
+    return response;
 }
 async function getModulesAssignedToThisCourse(courseId) {
     let allModulesResponse = await getAllModules();
