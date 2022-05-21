@@ -36,3 +36,8 @@
 .success {
     color: green;
 }
+
+#course-details-icon-for-collapse {
+    width: 5%;
+    height: auto;
+}
