@@ -52,7 +52,10 @@ async function displayDetails(courseId = localStorage.getItem("courseIdToShowDet
 }
 async function displayAllModules(courseId, containerToDisplay, containerForError) {
     let modulesAssignedToThisCourse = await getModulesAssignedToThisCourse(courseId);
-    if (modulesAssignedToThisCourse == null) containerForError.textContent = "Wystąpił problem z ładowaniem modułów";
+    if (modulesAssignedToThisCourse == null) {
+        containerForError.textContent = "Wystąpił problem z ładowaniem modułów";
+        return;
+    }
     else if (Object.keys(modulesAssignedToThisCourse).length == 0) {
         containerToDisplay.textContent = "Nie dodano jeszcze żadnego modułu";
         return;
@@ -73,7 +76,7 @@ async function displayAllModules(courseId, containerToDisplay, containerForError
         tdForItem.setAttribute('id', `course-details-module-${key}`);
         // tdForItem.textContent = modulesAssignedToThisCourse[key]["name"];
 
-        
+
         await displaySectionsWithCollapseManager(modulesAssignedToThisCourse[key], tdForItem);
 
         // const collapseItem=document.createElement("a");
@@ -101,44 +104,6 @@ async function displayAllModules(courseId, containerToDisplay, containerForError
 }
 async function displaySectionsWithCollapseManager(moduleElement, mainContainer) {
 
-    let pForCollapse=document.createElement("p");
-    let aForCollapse=document.createElement("a");
-    aForCollapse.setAttribute("class", "btn btn-primary");
-    aForCollapse.setAttribute("data-bs-toggle", "collapse");
-    aForCollapse.setAttribute("href", "#moduleSections");
-    aForCollapse.setAttribute("role", "button");
-    aForCollapse.setAttribute("aria-expanded", "false");
-    aForCollapse.setAttribute("aria-controls", "moduleSections");
-    aForCollapse.textContent=moduleElement["name"];
-
-    pForCollapse.appendChild(aForCollapse);
-
-    let divForCollapes=document.createElement("div");
-    divForCollapes.setAttribute("class", "collapse");
-    divForCollapes.setAttribute("id", "moduleSections");
-
-    let divForCard=document.createElement("div");
-    divForCard.setAttribute("class", "card card-body");
-    const errorContainerForDisplayingSections=document.createElement("div");
-    errorContainerForDisplayingSections.setAttribute("id", `course-details-error-container-module-${moduleElement["id"]}-sections`);
-
-
-    let sectionsAssignedToThisModule=await getSectionsAssignedToTheModule(moduleElement["id"], errorContainerForDisplayingSections);
-    console.log(sectionsAssignedToThisModule);
-    if(sectionsAssignedToThisModule==null) mainContainer.textContent="Brak sekcji dla danego modułu";
-
-    for(let i=0; i<sectionsAssignedToThisModule.length; i++){
-        let section=sectionsAssignedToThisModule[i];
-        let sectionId=section["id"];
-        console.log(section);
-
-        let divForSection=document.createElement("div");
-        divForSection.setAttribute("id", `course-details-module-${moduleElement}-section-${sectionId}`);
-        divForSection.textContent=section["name"];
-        
-        divForCard.appendChild(divForSection);
-    }
-
     // <p>
     //     <a class="btn btn-primary" data-bs-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample">
     //       Link with href
@@ -149,6 +114,75 @@ async function displaySectionsWithCollapseManager(moduleElement, mainContainer) 
     //       Some placeholder content for the collapse component. This panel is hidden by default but revealed when the user activates the relevant trigger.
     //     </div>
     //   </div>
+    //poniżej napisano to, co jest wyżej tylko w JS, jest kilka dodatków
+    let pForCollapse = document.createElement("p");
+    let aForCollapse = document.createElement("a");
+    aForCollapse.setAttribute("class", "btn btn-primary");
+    aForCollapse.setAttribute("data-bs-toggle", "collapse");
+    aForCollapse.setAttribute("href", `#moduleSections-${moduleElement["id"]}`);
+    aForCollapse.setAttribute("role", "button");
+    aForCollapse.setAttribute("aria-expanded", "false");
+    aForCollapse.setAttribute("aria-controls", "moduleSections");
+    aForCollapse.textContent = `${moduleElement["name"]}`; //wyswietl nazwę modułu
+
+    let imgCollapse = document.createElement("img");
+    imgCollapse.setAttribute("src", "collapse-expand-icon-8.jpg");
+    imgCollapse.setAttribute("alt", "icon-for-collapse");
+    imgCollapse.setAttribute("id", "course-details-icon-for-collapse");
+    aForCollapse.appendChild(imgCollapse);
+
+    let buttonToAddSection = document.createElement("button");
+    buttonToAddSection.setAttribute("id", "course-details-button-to-add-section");
+    buttonToAddSection.setAttribute("class", "btn btn-outline-success");
+    buttonToAddSection.textContent = "[+] dodaj sekcję";
+    buttonToAddSection.addEventListener('click', async function (e) {
+        e.preventDefault();
+        localStorage.setItem("moduleIdToAddSectionTo", moduleElement["id"]);
+        window.location = "add-section.html";
+    });
+    aForCollapse.appendChild(buttonToAddSection);
+
+
+    pForCollapse.appendChild(aForCollapse);
+
+    let divForCollapes = document.createElement("div");
+    divForCollapes.setAttribute("class", "collapse");
+    divForCollapes.setAttribute("id", `moduleSections-${moduleElement["id"]}`);
+
+    let divForCard = document.createElement("div");
+    divForCard.setAttribute("class", "card card-body");
+    const errorContainerForDisplayingSections = document.createElement("div");
+    errorContainerForDisplayingSections.setAttribute("id", `course-details-error-container-module-${moduleElement["id"]}-sections`);
+
+
+    let sectionsAssignedToThisModule = await getSectionsAssignedToTheModule(moduleElement["id"], errorContainerForDisplayingSections);
+    console.log(sectionsAssignedToThisModule);
+    if (sectionsAssignedToThisModule == null || sectionsAssignedToThisModule.length == 0) {
+        let divForSection = document.createElement("div");
+        divForSection.setAttribute("id", `course-details-module-${moduleElement["id"]}-section-empty`);
+        divForSection.textContent = "Brak sekcji do wyświetlenia";
+
+        divForCard.appendChild(divForSection);
+        divForCollapes.appendChild(divForCard);
+        mainContainer.appendChild(pForCollapse);
+        mainContainer.appendChild(divForCollapes);
+        return;
+    }
+
+    for (let i = 0; i < sectionsAssignedToThisModule.length; i++) {
+        let section = sectionsAssignedToThisModule[i];
+        let sectionId = section["id"];
+        console.log(section);
+
+        let divForSection = document.createElement("div");
+        divForSection.setAttribute("id", `course-details-module-${moduleElement["id"]}-section-${sectionId}`);
+        divForSection.textContent = section.name;
+
+        divForCard.appendChild(divForSection);
+        divForCollapes.appendChild(divForCard);
+    }
+
+
 
     mainContainer.appendChild(pForCollapse);
     mainContainer.appendChild(divForCollapes);
@@ -156,7 +190,7 @@ async function displaySectionsWithCollapseManager(moduleElement, mainContainer) 
 }
 async function getSectionsAssignedToTheModule(moduleId, containerForError) {
     let allSections = await getAllSections();
-    
+
     if (allSections == null) {
         containerForError.textContent = "Wystąpił problem z pobraniem sekcji należących do kursu";
         return null;
