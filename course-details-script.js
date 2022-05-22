@@ -4,7 +4,7 @@ import {
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
     isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
     getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
-    updateCourse
+    updateCourse, getSectionsAssignedToTheModule, getAllSections
 } from './general-script.js';
 window.onload = (async function () {
     await displayDetails();
@@ -133,7 +133,7 @@ async function displaySectionsWithCollapseManager(moduleElement, mainContainer) 
 
     let buttonToAddSection = document.createElement("button");
     buttonToAddSection.setAttribute("id", "course-details-button-to-add-section");
-    buttonToAddSection.setAttribute("class", "btn btn-outline-success");
+    buttonToAddSection.setAttribute("class", "btn btn-success");
     buttonToAddSection.textContent = "[+] dodaj sekcję";
     buttonToAddSection.addEventListener('click', async function (e) {
         e.preventDefault();
@@ -188,47 +188,8 @@ async function displaySectionsWithCollapseManager(moduleElement, mainContainer) 
     mainContainer.appendChild(divForCollapes);
 
 }
-async function getSectionsAssignedToTheModule(moduleId, containerForError) {
-    let allSections = await getAllSections();
 
-    if (allSections == null) {
-        containerForError.textContent = "Wystąpił problem z pobraniem sekcji należących do kursu";
-        return null;
-    }
-    let allSectionsJson = await allSections.json();
-    let data = allSectionsJson.data;
-    if (Object.keys(data).length === 0) return null;
-    let sectionsAssignedToThisModule = [];
-    for (let i = 0; i < data.length; i++) {
-        let item = data[i];
-        if (item["module"] == moduleId) sectionsAssignedToThisModule.push(item);
-    }
-    return sectionsAssignedToThisModule;
-}
-async function getAllSections() {
-    let response;
-    let errorOccured = false;
-    let responseNotOkayFound = false;
-    try {
 
-        response = await fetch(`${appAddress}/items/Sections`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            }
-        });
-        if (!response.ok) responseNotOkayFound = true;
-
-    }
-    catch (err) {
-        console.error(`${err}`);
-        errorOccured = true;
-    }
-    console.log(response.statusText);
-    if (errorOccured || responseNotOkayFound) return null;
-    return response;
-}
 async function getModulesAssignedToThisCourse(courseId) {
     let allModulesResponse = await getAllModules();
     if (allModulesResponse == null) return null;

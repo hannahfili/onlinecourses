@@ -2,7 +2,7 @@ import {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails, updateCourse
+    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails, updateCourse, checkIfElementOccursInArrayMoreThanOnce
 } from './general-script.js';
 
 //------------------------------------------------------
@@ -177,14 +177,8 @@ async function courseManager(e, mode, courseId = localStorage.getItem("courseIdE
     }
     console.log(theSameTeacherSelectedMoreThanOnce);
     if (!theSameTeacherSelectedMoreThanOnce) {
-        for (let i = 0; i < teachersIdsFromSelects.length; i++) {
-            for (let k = i + 1; k < teachersIdsFromSelects.length; k++) {
-                if (teachersIdsFromSelects[i] == teachersIdsFromSelects[k]) {
-                    theSameTeacherSelectedMoreThanOnce = true;
-                    break;
-                }
-            }
-        }
+        theSameTeacherSelectedMoreThanOnce = checkIfElementOccursInArrayMoreThanOnce(teachersIdsFromSelects);
+
     }
     let failure;
     if (theSameTeacherSelectedMoreThanOnce) {
