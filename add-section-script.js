@@ -10,6 +10,7 @@ window.onload = (async function () {
     await addSectionDisplayManager();
 })
 async function addSectionDisplayManager(moduleId = localStorage.getItem("moduleIdToAddSectionTo")) {
+    await redirectToIndexIfUserIsNotLoggedInAdmin();
     let errorContainer = id("add-section-display-modules-errors");
     let moduleElementResponse = await getParticularModuleData(moduleId);
     if (moduleElementResponse == null) {
@@ -26,19 +27,26 @@ async function addSectionDisplayManager(moduleId = localStorage.getItem("moduleI
     let pageNameEl = id("add-section-page-name");
     pageNameEl.textContent = `Moduł: ${moduleElement["name"]}`;
 
-    let thisModulesLastSectionId = await getLastSectionIdOrOrderNumber(moduleId, "id");
-    let newSectionId;
-    thisModulesLastSectionId > 0 ? newSectionId = thisModulesLastSectionId + 1 : newSectionId = 0;
-
-    let newSectionOrderNumber;
-    let thisModulesLastSectionOrderNumber = await getLastSectionIdOrOrderNumber(moduleId, "order_number");
-    thisModulesLastSectionOrderNumber > 0 ? newSectionOrderNumber = thisModulesLastSectionOrderNumber + 1 : newSectionOrderNumber = 0;
+    
+    let newSectionId=await getLastSectionId();
+    if(newSectionId==-1){
+        errorContainer.textContent="Problem z serwerem - nie uda się dodać sekcji";
+        return;
+    }
+    console.log("last section id: ", newSectionId);
+    newSectionId+=1;
+    let newSectionOrderNumber=await getLastSectionAssignedToThisModuleIdOrOrderNumber(moduleId, "order_number");
+    console.log("last section order number: ",newSectionOrderNumber );
+    newSectionOrderNumber=newSectionOrderNumber+1;
+    console.log("newSectionOrderNumber",newSectionOrderNumber );
+    // let thisModulesLastSectionOrderNumber = await getLastSectionAssignedToThisModuleIdOrOrderNumber(moduleId, "order_number");
+    // thisModulesLastSectionOrderNumber > 0 ? newSectionOrderNumber = thisModulesLastSectionOrderNumber + 1 : newSectionOrderNumber = 0;
 
     await enableToAddManyFileAndTextElements(moduleId, newSectionId, newSectionOrderNumber, errorContainer);
 }
 async function enableToAddManyFileAndTextElements(moduleId, newSectionId, newSectionOrderNumber, errorContainer) {
 
-    let sectionName = id("add-section-name");
+    
     let buttonToAddTextElement = id("add-section-add-text-element-button");
     let buttonToAddFileElement = id("add-section-add-file-element-button");
     let submitButton = id("add-section-submit");
@@ -68,7 +76,13 @@ async function enableToAddManyFileAndTextElements(moduleId, newSectionId, newSec
     });
     submitButton.addEventListener('click', async function (e) {
         e.preventDefault();
-        await addSectionManager(errorContainer);
+        let sectionNameValue = id("add-section-name").value;
+        if(sectionNameValue==""){
+            errorContainer.textContent="Podaj nazwę sekcji!";
+            return;
+        }
+        console.log(sectionNameValue);
+        await addSectionManager(errorContainer, sectionNameValue, newSectionId, moduleId, newSectionOrderNumber);
     })
 }
 function displayOptionToAddFileElement(firstFileInput, errorContainer) {
@@ -249,21 +263,189 @@ function updateAllSelects() {
     });
 
 }
-async function addSectionManager(errorContainer) {
-    let allFilesDivs = document.querySelectorAll(".add-section-add-text-element-div-for-input");
-    let allTextsDivs = document.querySelectorAll(`.add-section-add-file-element-div-for-file-input`);
 
+async function addSectionManager(errorContainer, sectionName, newSectionId, moduleId, sectionOrderNumber){
+    let allFilesDivs = document.querySelectorAll(`.add-section-add-file-element-div-for-file-input`);
+    let allTextsDivs = document.querySelectorAll(".add-section-add-text-element-div-for-input");
+    
     console.log(allFilesDivs);
     console.log(allTextsDivs);
 
-    let selectedOptionsOccurMoreThanOnce = checkIfSelectedOptionsOccurMoreThanOnce(allFilesDivs, allTextsDivs);
-    if (selectedOptionsOccurMoreThanOnce) {
+    let selectsValidated=validateSelects(allFilesDivs, allTextsDivs);
+    if (!selectsValidated) {
         errorContainer.textContent = "Niepoprawna kolejność - każdy element musi mieć unikatowy numer porządkowy!";
         return false;
     }
     errorContainer.textContent = '';
     let elementsToAddToSection = getOrderNumbersAndValuesFromInputs(allFilesDivs, allTextsDivs);
+    let createdSection= await createEmptySection(newSectionId, sectionName, moduleId, sectionOrderNumber);
+    if(createdSection){
+        let elementsAddedCorrectly= await addElementsToSection(elementsToAddToSection, newSectionId);
+    }
+    else{
 
+    }  
+}
+async function createEmptySection(sectionId, sectionName, moduleId, sectionOrderNumber, loggedInUserId=localStorage.getItem("loggedInUserId")){
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    console.log("create empty section: order number:", sectionOrderNumber);
+    let dataToPost={
+        "id": sectionId,
+        "user_created": loggedInUserId,
+        "module": moduleId,
+        "name": sectionName,
+        "order_number": sectionOrderNumber,
+        "activity_status": "active"
+    };
+    let dataToPostJson=JSON.stringify(dataToPost);
+    try {
+
+        response = await fetch(`${appAddress}/items/Sections`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: dataToPostJson
+        });
+        if (!response.ok) responseNotOkayFound = true;
+
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    // console.log(response.statusText);
+    if (errorOccured || responseNotOkayFound) return false;
+    return true;
+}
+async function addElementsToSection(elementsDictionary, newSectionId){
+    let errorContainer=id("add-section-form-errors");
+    for(let key in elementsDictionary){
+        let element=elementsDictionary[key];
+        let elementType=element["type"];
+        let resultOfAdditionFile=true;
+        let resultOfAdditionText=true;
+
+        if(elementType=="text"){
+            resultOfAdditionText=await addTextElementManager(element, newSectionId);
+        }
+        else if(elementType=="file"){
+            resultOfAdditionFile=await addFileElementManager(element, newSectionId);
+        }
+        if(resultOfAdditionFile==false) {
+            let textNodeToDisplayErrorAtAddingFile=document.createTextNode(`Wystąpił problem przy dodawaniu pliku o nazwie: ${element.name}`);
+            errorContainer.appendChild(textNodeToDisplayErrorAtAddingFile);
+        }
+        if(resultOfAdditionText==false) {
+            let textNodeToDisplayErrorAtAddingText=document.createTextNode(`Wystąpił problem przy dodawaniu tekstu o początkowej treści: ${element.value.substring(20)}...`);
+            errorContainer.appendChild(textNodeToDisplayErrorAtAddingText);
+        }
+    }
+}
+async function addTextElementManager(element, sectionId, userCreated=localStorage.getItem("loggedInUserId")){
+    //DODAC ID UZYTKOWNIKA!!!
+    let valuesToAddTextElement={
+        "order_number": element["order_number"],
+        "content": element["value"],
+        "user_created": userCreated,
+        "section": sectionId
+    }
+    let valuesJson=JSON.stringify(valuesToAddTextElement);
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    try {
+
+        response = await fetch(`${appAddress}/items/Text_elements`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: valuesJson
+        });
+        if (!response.ok) responseNotOkayFound = true;
+
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (errorOccured || responseNotOkayFound) return false;
+    return true;
+}
+async function addFileElementManager(element, sectionId, userCreated=localStorage.getItem("loggedInUserId")){
+    
+    let fileAddedId=await uploadFile(element["value"], element["file_name"]);
+    if(fileAddedId==null){
+        return false;        
+    }
+    let valuesToAddFileElement={
+        "user_created": userCreated,
+        "order_number": element["order_number"],        
+        "section":sectionId,
+        "file": fileAddedId
+    }
+    let valuesJson=JSON.stringify(valuesToAddFileElement);
+
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    let responseJson;
+
+    try {
+        let response = await fetch(`${appAddress}/items/File_elements`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: valuesJson,
+        });
+        if (!response.ok) responseNotOkayFound = true;
+        console.log(response.statusText);
+        responseJson=await response.json();
+
+    } catch (error) {
+        console.log(error.message);
+        errorOccured = true;
+    }
+    if(errorOccured || responseNotOkayFound){
+        return false;
+    }
+    return true;
+}
+async function uploadFile(file, fileName){
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('filename_download', fileName);
+
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    let responseJson;
+
+    try {
+        let response = await fetch(`${appAddress}/files`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: formData,
+        });
+        if (!response.ok) responseNotOkayFound = true;
+        console.log(response.statusText);
+        responseJson=await response.json();
+
+    } catch (error) {
+        console.log(error.message);
+        errorOccured = true;
+    }
+    if(errorOccured || responseNotOkayFound){
+        return null;
+    }
+    return responseJson.data["id"];
 }
 function getOrderNumbersAndValuesFromInputs(allFilesDivs, allTextsDivs) {
     let allOrderNumbersAndInputValues = [];
@@ -271,18 +453,34 @@ function getOrderNumbersAndValuesFromInputs(allFilesDivs, allTextsDivs) {
         let children = div.children;
         let selectsChildren = [...children].filter((element) => element.tagName == "SELECT");
         let fileInputChildren = [...children].filter((element) => element.tagName == "INPUT");
-        console.log(selectsChildren);
-        console.log(fileInputChildren);
+        // console.log(selectsChildren);
+        // console.log(fileInputChildren);
+        let filesData={};
+        if(fileInputChildren[0].files.length==1){
+            filesData["order_number"]=selectsChildren[0].value;
+            filesData["value"]=fileInputChildren[0].files[0];
+            filesData["file_name"]=fileInputChildren[0].files[0].name;
+            filesData["type"]="file";
+            allOrderNumbersAndInputValues.push(filesData);
+        }
+        
     });
     allTextsDivs.forEach(function (div) {
         let children = div.children;
         let selectsChildren = [...children].filter((element) => element.tagName == "SELECT");
         let textInputChildren = [...children].filter((element) => element.tagName == "INPUT");
-        console.log(selectsChildren);
-        console.log(textInputChildren);
+        let textData={};
+        if(textInputChildren[0].value!=''){
+            textData["order_number"]=selectsChildren[0].value;
+            textData["value"]=textInputChildren[0].value;
+            textData["type"]="text";
+            allOrderNumbersAndInputValues.push(textData);
+        }
+        
     });
+    return allOrderNumbersAndInputValues;
 }
-function checkIfSelectedOptionsOccurMoreThanOnce(allFilesDivs, allTextsDivs) {
+function validateSelects(allFilesDivs, allTextsDivs) {
     // let f = [...elementsToLookFor].map(element => Number(String(element.id).match(/\d+/g)));
     let allSelectsValues = [];
     allFilesDivs.forEach(function (div) {
@@ -297,14 +495,41 @@ function checkIfSelectedOptionsOccurMoreThanOnce(allFilesDivs, allTextsDivs) {
         let selectsValues = [...selectsChildren].map(child => Number(child.value));
         allSelectsValues.push.apply(allSelectsValues, selectsValues);
     });
-    return checkIfElementOccursInArrayMoreThanOnce(allSelectsValues);
+    let selectedOptionsOccurMoreThanOnce = checkIfElementOccursInArrayMoreThanOnce(allSelectsValues);
+    let zeroOccursInSelectsOrder=checkIfZeroOccursInArray(allSelectsValues);
+    if(zeroOccursInSelectsOrder) console.log("NIENUMERY")
+
+    if(selectedOptionsOccurMoreThanOnce || zeroOccursInSelectsOrder) return false;
+    return true;
 }
-async function getLastSectionIdOrOrderNumber(moduleId, valueToLookFor) {
+function checkIfZeroOccursInArray(array){
+    for(let i=0; i<array.length; i++){
+        console.log(array[i]);
+        if(array[i]==0) {console.log("trafiony!");
+        return true;}
+    }
+}
+async function getLastSectionAssignedToThisModuleIdOrOrderNumber(moduleId, valueToLookFor) {
     let sectionsAssignedToThisModule = await getSectionsAssignedToTheModule(moduleId);
     let maxNumber = 0;
     for (let i = 0; i < sectionsAssignedToThisModule.length; i++) {
+        console.log(sectionsAssignedToThisModule[i]);
         if (Number(sectionsAssignedToThisModule[i][valueToLookFor]) > maxNumber) {
             maxNumber = Number(sectionsAssignedToThisModule[i][valueToLookFor]);
+        }
+    }
+    return maxNumber;
+
+}
+async function getLastSectionId(){
+    let allSections=await getAllSections();
+    if(!allSections.ok) return -1;
+    let allSectionsJson=await allSections.json();
+    let allSectionsData=allSectionsJson.data;
+    let maxNumber = 0;
+    for (let i = 0; i < allSectionsData.length; i++) {
+        if (Number(allSectionsData[i]["id"]) > maxNumber) {
+            maxNumber = Number(allSectionsData[i]["id"]);
         }
     }
     return maxNumber;

@@ -65,8 +65,8 @@ async function logIn(email, password) {
 
 }
 async function setLoggedUserData(email, password, responseJson) {
-    localStorage.setItem("loggedInEmail", email);
-    localStorage.setItem("loggedInPassword", password);
+    // localStorage.setItem("loggedInEmail", email);
+    // localStorage.setItem("loggedInPassword", password);
     localStorage.setItem("access_token", responseJson["data"]["access_token"]);
     localStorage.setItem("refresh_token", responseJson["data"]["refresh_token"]);
 
@@ -81,6 +81,7 @@ async function setLoggedUserData(email, password, responseJson) {
         });
         const responseJsonAboutMe = await response.json();
         localStorage.setItem("loggedInRole", responseJsonAboutMe["data"]["role"]);
+        localStorage.setItem("loggedInUserId", responseJsonAboutMe["data"]["id"]);
         localStorage.setItem("loggedInPlatformAccessTimeout", responseJsonAboutMe["data"]["platform_access_timeout"]);
     }
     catch (err) {
