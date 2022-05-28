@@ -283,6 +283,31 @@ async function updateCourse(courseId, fieldName, fieldValue, actualizationName) 
     if (responseNotOkayFound || errorOccured) return false;
     return true;
 }
+async function deleteTeacherFromCourse(itemId, errorContainer, errorMessage) {
+    // console.log("usuwamy", itemId);
+    let response;
+    let errorOccured = false;
+
+    try {
+        response = await fetch(`${appAddress}/items/Courses_directus_users/${itemId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (!response.ok || errorOccured) {
+        errorContainer.textContent = errorMessage;
+        return false;
+    }
+
+    return true;
+}
 async function getStudentsFromStudentsCoursesJunctionTable(courseId, getAssignedStudents = true, containerForError) {
 
 
@@ -297,7 +322,7 @@ async function getStudentsFromStudentsCoursesJunctionTable(courseId, getAssigned
         // console.log(item["directus_users_id"]);
         if (item["Courses_id"] == courseId) studentsAssignedToThisCourse.push(item["directus_users_id"]);
     }
-    console.log(studentsAssignedToThisCourse);
+    // console.log(studentsAssignedToThisCourse);
 
     if (getAssignedStudents == true) {
         if (studentsAssignedToThisCourse.length == 0) { return null; }
@@ -312,6 +337,8 @@ async function getStudentsFromStudentsCoursesJunctionTable(courseId, getAssigned
 
 async function getCourseDetails(courseId, errorContainer) {
     let response;
+    let errorOccured=false;
+    let responseNotOkayFound=false;
     try {
         response = await fetch(`${appAddress}/items/Courses/${courseId}`, {
             method: 'GET',
@@ -320,12 +347,16 @@ async function getCourseDetails(courseId, errorContainer) {
                 'Authorization': `Bearer ${localStorage.getItem("access_token")}`
             }
         });
+        if(!response.ok) responseNotOkayFound=true;
     }
     catch (err) {
         console.error(`${err}`);
-        errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
+        errorOccured=true;
     }
-    if (!response.ok) errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
+    if(responseNotOkayFound || errorOccured){
+        errorContainer.textContent = `Nie udało załadować szczegółów kursu`;
+        return null;
+    } 
 
     return response;
 }
@@ -333,17 +364,19 @@ async function getSectionsAssignedToTheModule(moduleId, containerForError) {
     let allSections = await getAllSections();
 
     if (allSections == null) {
-        containerForError.textContent = "Wystąpił problem z pobraniem sekcji należących do kursu";
+        containerForError.textContent = "Wystąpił problem z pobraniem sekcji należących do modułu";
         return null;
     }
     let allSectionsJson = await allSections.json();
+    
     let data = allSectionsJson.data;
-    if (Object.keys(data).length === 0) return null;
+    if (Object.keys(data).length === 0) return [];
     let sectionsAssignedToThisModule = [];
     for (let i = 0; i < data.length; i++) {
         let item = data[i];
         if (item["module"] == moduleId) sectionsAssignedToThisModule.push(item);
     }
+    // console.log(sectionsAssignedToThisModule);
     return sectionsAssignedToThisModule;
 }
 async function getAllSections() {
@@ -366,7 +399,7 @@ async function getAllSections() {
         console.error(`${err}`);
         errorOccured = true;
     }
-    console.log(response.statusText);
+    // console.log(response.statusText);
     if (errorOccured || responseNotOkayFound) return null;
     return response;
 }
@@ -382,11 +415,186 @@ function checkIfElementOccursInArrayMoreThanOnce(array) {
     }
     return occursTwice;
 }
+async function getTeachersDataToDisplay(course_directus_users_relation_ids) {
+    let teachersData = {};
+    let teachersDataToDisplay = [];
+    // console.log(course_directus_users_relation_ids);
+    for (let number in course_directus_users_relation_ids) {
+        console.log(number);
+        teachersData[course_directus_users_relation_ids[number]] = await getTeacherIdFromCourseDirectusUsersRelation(course_directus_users_relation_ids[number]);
+    }
+    for (let key in teachersData) {
+        if (teachersData[key] != -1) {
+            let data = await getTeacherDataById(teachersData[key]);
+            if (data != -1) teachersDataToDisplay.push(data);
+        }
+    }
+    // console.log(teachersData);
+    return teachersDataToDisplay;
+}
+async function getTeacherIdFromCourseDirectusUsersRelation(id) {
+    let response;
+    try {
+        response = await fetch(`${appAddress}/items/Courses_directus_users/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+        if (response.ok) {
+            let json = await response.json();
+            return json.data["directus_users_id"];
+        }
+    }
+    catch (err) {
+        alert(err);
+        console.error(`${err}`);
+        return -1;
+    }
+
+}
+async function getTeacherDataById(id) {
+    let response;
+    try {
+        response = await fetch(`${appAddress}/users/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+        if (response.ok) {
+            let json = await response.json();
+            let first_name = json.data["first_name"];
+            let last_name = json.data["last_name"];
+            let email = json.data["email"];
+            if (first_name != null && last_name != null) return first_name + " " + last_name;
+            else return email;
+        }
+    }
+    catch (err) {
+        alert(err);
+        console.error(`${err}`);
+        return -1;
+    }
+}
+async function getModulesAssignedToThisCourse(courseId) {
+    let allModulesResponse = await getAllModules();
+    if (allModulesResponse == null) return null;
+    let json = await allModulesResponse.json();
+    let data = json.data;
+    let modulesAssignedToThisCourseRepresentedAsDictionaryWithOrderNumberAsKeyAndModuleDataAsValue = {};
+    if (data.length == 0) return modulesAssignedToThisCourseRepresentedAsDictionaryWithOrderNumberAsKeyAndModuleDataAsValue;
+    for (let i = 0; i < data.length; i++) {
+        if (data[i]["course"] == courseId) {
+            modulesAssignedToThisCourseRepresentedAsDictionaryWithOrderNumberAsKeyAndModuleDataAsValue[data[i]["order_number"]] = data[i];
+        }
+    }
+    return modulesAssignedToThisCourseRepresentedAsDictionaryWithOrderNumberAsKeyAndModuleDataAsValue;
+
+}
+async function getAllModules() {
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    try {
+
+        response = await fetch(`${appAddress}/items/Modules`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+        if (!response.ok) responseNotOkayFound = true;
+
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    console.log(response.statusText);
+    if (errorOccured || responseNotOkayFound) return null;
+    return response;
+}
+async function addFileElementManager(element, sectionId, userCreated=localStorage.getItem("loggedInUserId")){
+    
+    let fileAddedId=await uploadFile(element["value"], element["file_name"]);
+    if(fileAddedId==null){
+        return false;        
+    }
+    let valuesToAddFileElement={
+        "user_created": userCreated,
+        "order_number": element["order_number"],        
+        "section":sectionId,
+        "file": fileAddedId
+    }
+    let valuesJson=JSON.stringify(valuesToAddFileElement);
+
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    let responseJson;
+
+    try {
+        let response = await fetch(`${appAddress}/items/File_elements`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: valuesJson,
+        });
+        if (!response.ok) responseNotOkayFound = true;
+        console.log(response.statusText);
+        responseJson=await response.json();
+
+    } catch (error) {
+        console.log(error.message);
+        errorOccured = true;
+    }
+    if(errorOccured || responseNotOkayFound){
+        return false;
+    }
+    return true;
+}
+async function uploadFile(file, fileName){
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('filename_download', fileName);
+
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    let responseJson;
+
+    try {
+        let response = await fetch(`${appAddress}/files`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: formData,
+        });
+        if (!response.ok) responseNotOkayFound = true;
+        console.log(response.statusText);
+        responseJson=await response.json();
+
+    } catch (error) {
+        console.log(error.message);
+        errorOccured = true;
+    }
+    if(errorOccured || responseNotOkayFound){
+        return null;
+    }
+    return responseJson.data["id"];
+}
 export {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
     isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
     getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
-    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce
+    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
+    getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules, deleteTeacherFromCourse,
+    addFileElementManager
 };

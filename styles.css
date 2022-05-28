@@ -1,13 +1,41 @@
 .container {
     font-family: arial;
-    font-size: 24px;
-    margin: 25px;
-    width: 350px;
-    height: 400px;
+    font-size: 12px;
     outline: dashed 1px black;
     /* Setup */
     position: relative;
 }
+.course-all-modules-sections-section-elements-content{
+    background-color:#6c9191;
+    margin:5px;
+}
+.course-all-modules-sections-section-elements-containers{
+    background-color: #badede;
+    outline: solid 5px yellow;
+    margin-bottom: 10px;
+    
+    
+}
+.course-all-modules-sections-modules-all-sections-div{
+    margin-bottom: 40px; 
+}
+.course-all-modules-sections-modules-main-containers{
+    background-color: #f0ffff;
+    margin-bottom: 80px;
+    outline: solid 3px #f0ffff;
+}
+.course-all-modules-sections-module-order-selects{
+    background-color: yellow;
+}
+.course-all-modules-sections-section-main-containers{
+    background-color: grey;
+    margin-top: 40px;
+    margin-bottom: 40px;
+    margin-left: 40px;
+    margin-right: 40px;
+    outline: dotted 3px #f0ffff;
+}
+
 
 #password-error {
     font-family: arial;

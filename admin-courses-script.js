@@ -2,7 +2,9 @@ import {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase
+    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
+    getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
+    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce, getTeachersDataToDisplay
 } from './general-script.js';
 
 window.onload = (async function () {
@@ -54,7 +56,7 @@ async function displayAllCourses() {
                 // console.log(teachers);
                 //utworzenie okienka na nauczycieli
                 const teachersBox = document.createElement('td');
-                teachersBox.setAttribute('id', `course-details-teacher-${teachers[i]}`);
+                teachersBox.setAttribute('id', `course-details-teacher-${course["id"]}`);
                 for (let i in teachers) {
                     let text = document.createTextNode(`${teachers[i]}`);
                     teachersBox.appendChild(text);
@@ -113,7 +115,7 @@ async function displayAllCourses() {
                 const buttonShowDetails = document.createElement('button');
                 buttonShowDetails.setAttribute('id', `button-admin-courses-show-details-${course["id"]}`);
                 buttonShowDetails.setAttribute('class', `btn btn-secondary`);
-                buttonShowDetails.textContent = "Pokaż szczegóły";
+                buttonShowDetails.textContent = "Szczegóły kursu";
                 buttonShowDetails.addEventListener('click', function () {
                     localStorage.setItem("courseIdToShowDetails", course["id"]);
                     window.location = "course-details.html";
@@ -137,10 +139,36 @@ async function displayAllCourses() {
 
                 // }
                 buttonActivateDesactivate.textContent = enableOrDisable;
-                buttonActivateDesactivate.addEventListener('click', function () { /*FUNKCJA DO (dez)    aktywacji KURSU*/ });
+                buttonActivateDesactivate.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    if(buttonActivateDesactivate.textContent=="Aktywuj"){
+                        await des_activateCourse(course["id"], "active");
+                    }
+                    else{
+                        await des_activateCourse(course["id"], "disabled");
+                    }
+                    
+                    window.location.reload();
+                 });
 
                 activateDesactivateBox.appendChild(buttonActivateDesactivate);
                 row.appendChild(activateDesactivateBox);
+
+                //utworzenie okienka na przycisk szczegółowego podglądu kursu
+                const previewBox = document.createElement('td');
+                previewBox.setAttribute('id', `course-details-preview-${course["id"]}`);
+                const buttonPreview = document.createElement('button');
+                buttonPreview.setAttribute('id', `button-admin-courses-preview-${course["id"]}`);
+                buttonPreview.setAttribute('class', `btn btn-secondary`);
+                buttonPreview.textContent = "Edycja modułów i sekcji";
+                buttonPreview.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    localStorage.setItem("courseIdToShowDetails", course["id"]);
+                    window.location="courses-all-modules-sections.html";
+                 });
+
+                previewBox.appendChild(buttonPreview);
+                row.appendChild(previewBox);
 
 
                 mainContainer.appendChild(row);
@@ -150,6 +178,36 @@ async function displayAllCourses() {
 
         }
     }
+}
+async function des_activateCourse(courseId, des_activate){
+    let response;
+    let responseNotOkayFound = false;
+    let errorOccured = false;
+    let info="";
+    let bodyToPost={
+        "activity_status": des_activate
+    }
+    let bodyToPostJson=JSON.stringify(bodyToPost);
+
+    if(des_activate=="active") info="Aktywowano kurs";
+    else info="Kurs nieaktywny";
+    try {
+        response = await fetch(`${appAddress}/items/Courses/${courseId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body:bodyToPostJson
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (responseNotOkayFound || errorOccured) alert('Wystąpił problem ze zmianą statusu aktywności kursu');
+    else alert(info);
 }
 async function deleteCourseManager(course) {
     console.log(course["id"]);
@@ -192,67 +250,5 @@ async function deleteCourseFromDatabase(courseId) {
     return true;
 }
 
-async function getTeachersDataToDisplay(course_directus_users_relation_ids) {
-    let teachersData = {};
-    let teachersDataToDisplay = [];
-    // console.log(course_directus_users_relation_ids);
-    for (let number in course_directus_users_relation_ids) {
-        console.log(number);
-        teachersData[course_directus_users_relation_ids[number]] = await getTeacherIdFromCourseDirectusUsersRelation(course_directus_users_relation_ids[number]);
-    }
-    for (let key in teachersData) {
-        if (teachersData[key] != -1) {
-            let data = await getTeacherDataById(teachersData[key]);
-            if (data != -1) teachersDataToDisplay.push(data);
-        }
-    }
-    console.log(teachersData);
-    return teachersDataToDisplay;
-}
-async function getTeacherIdFromCourseDirectusUsersRelation(id) {
-    let response;
-    try {
-        response = await fetch(`${appAddress}/items/Courses_directus_users/${id}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            }
-        });
-        if (response.ok) {
-            let json = await response.json();
-            return json.data["directus_users_id"];
-        }
-    }
-    catch (err) {
-        alert(err);
-        console.error(`${err}`);
-        return -1;
-    }
 
-}
-async function getTeacherDataById(id) {
-    let response;
-    try {
-        response = await fetch(`${appAddress}/users/${id}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            }
-        });
-        if (response.ok) {
-            let json = await response.json();
-            let first_name = json.data["first_name"];
-            let last_name = json.data["last_name"];
-            let email = json.data["email"];
-            if (first_name != null && last_name != null) return first_name + " " + last_name;
-            else return email;
-        }
-    }
-    catch (err) {
-        alert(err);
-        console.error(`${err}`);
-        return -1;
-    }
-}
+
