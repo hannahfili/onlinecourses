@@ -4,9 +4,11 @@ import {
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
     isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
     getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
-    updateCourse, getSectionsAssignedToTheModule, getAllSections
-} from './general-script.js';
+    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
+    getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules} from './general-script.js';
 window.onload = (async function () {
+    redirectToIndexIfUserIsNotLoggedInAdmin();
+    
     await displayDetails();
 })
 async function displayDetails(courseId = localStorage.getItem("courseIdToShowDetails")) {
@@ -44,10 +46,159 @@ async function displayDetails(courseId = localStorage.getItem("courseIdToShowDet
     if (data["number_of_students_attending_course"] > 0) await displayAllStudents(courseId, studentsListElement, errorContainer);
     else {
         id("course-details-students-label").textContent = "Brak uczestników"
-        id("course-details-checkbox-options").remove();
+        id("course-details-delete-many-students").remove();
     }
     let moduleContainerToDisplay = id("course-details-all-modules");
-    await displayAllModules(courseId, moduleContainerToDisplay, errorContainerForDisplayingModules);
+
+    let buttonToAddModule = id("course-details-add-module-button-div");
+    buttonToAddModule.addEventListener('click', async function (e) {
+        e.preventDefault();
+        let moduleNameInput=id("course-details-module-name-input");
+        if(!moduleNameInput){
+            let addedModule = await addModuleManager(courseId);
+        if (!addedModule) errorContainer.textContent="Dodanie modułu nie jest możliwe. Błąd serwera";
+        }
+        
+    })
+    let buttonToSeeAllDetails=id("course-details-see-all-courses-modules-and-sections");
+    buttonToSeeAllDetails.addEventListener('click', function(e){
+        e.preventDefault();
+        window.location="courses-all-modules-sections.html";
+        
+    });
+   
+    let buttonToAddManyStudents=id("course-details-add-many-students");
+    buttonToAddManyStudents.addEventListener('click', function(e){
+        e.preventDefault();
+        localStorage.setItem("courseIdToAddStudents", courseId);
+        window.location = "addStudentsToCourse.html";        
+    });
+
+
+    await displayAllModules(courseId, moduleContainerToDisplay);
+}
+async function addModuleManager(courseId, moduleToAddAtCourseAllModulesSectionsPage=false, containerToDisplayAddModule=null) {
+    console.log("JESTEM")
+    let lastModuleAssignedToThisCourseOrderNumber = await getModuleAsssignedToThisCourseLastOrderNumber(courseId);
+    if (lastModuleAssignedToThisCourseOrderNumber == -1) return false;
+
+    let containerForDisplayingUpperButtons;
+    let prefix;
+    if(!moduleToAddAtCourseAllModulesSectionsPage){
+        prefix="course-details";
+        containerForDisplayingUpperButtons=id("course-details-add-module-upper-buttons-div");
+    }
+    else{
+        prefix="courses-all-modules-sections"
+        containerForDisplayingUpperButtons=document.createElement("div");
+        containerForDisplayingUpperButtons.setAttribute('id', `${prefix}-add-module-upper-buttons-div`);
+        containerToDisplayAddModule.appendChild(containerForDisplayingUpperButtons);
+    }
+    
+    let containerForInput=document.createElement('div');
+    containerForInput.setAttribute('id', `${prefix}-add-module-div`);
+    
+    // <label for="add-course-name">Nazwa kursu</label><br>
+    //             <input id="add-course-name" name="add-course-name" placeholder="Pole obowiązkowe" required><br>
+    //             <div class="error" id="add-course-name-error"></div>
+    let labelForNameInput=document.createElement('label');
+    labelForNameInput.setAttribute('for', `${prefix}-module-name-input`);
+    labelForNameInput.textContent="Nazwa modułu";
+    
+    let moduleNameInput=document.createElement('input');
+    moduleNameInput.setAttribute('id',`${prefix}-module-name-input`);
+    moduleNameInput.setAttribute('placeholder','Pole obowiązkowe');
+
+    let labelForDescriptionInput=document.createElement('label');
+    labelForDescriptionInput.setAttribute('for', `${prefix}-module-description-input`);
+    labelForDescriptionInput.textContent="Opis modułu";
+    
+    let moduleDescriptionInput=document.createElement('input');
+    moduleDescriptionInput.setAttribute('id',`${prefix}-module-description-input`);
+
+    let submitButton=document.createElement('button');
+    submitButton.setAttribute('id',`${prefix}-add-module-submit-button`);
+    submitButton.textContent="Zapisz";
+    let buttonToDeleteOptionToAddModule=document.createElement('button');
+    buttonToDeleteOptionToAddModule.setAttribute('id', `${prefix}-button-to-delete-option-to-add-module`);
+    buttonToDeleteOptionToAddModule.setAttribute('class', 'btn btn-danger');
+    buttonToDeleteOptionToAddModule.textContent = "X";
+
+      
+    containerForInput.appendChild(labelForNameInput);
+    containerForInput.appendChild(moduleNameInput);
+    containerForInput.appendChild(labelForDescriptionInput);
+    containerForInput.appendChild(moduleDescriptionInput);
+    containerForInput.appendChild(submitButton);
+    containerForInput.appendChild(buttonToDeleteOptionToAddModule);
+
+    containerForDisplayingUpperButtons.appendChild(containerForInput);
+    
+    buttonToDeleteOptionToAddModule.addEventListener('click', function(e){
+        e.preventDefault();
+        buttonToDeleteOptionToAddModule.parentElement.remove();
+    })
+    
+    submitButton.addEventListener('click', async function(e){
+        e.preventDefault();
+        let moduleAdded=await addModuleToDatabase(courseId, moduleNameInput.value, moduleDescriptionInput.value, lastModuleAssignedToThisCourseOrderNumber+1);
+        if(moduleAdded){
+            alert('Pomyślnie dodano moduł');
+            location.reload();
+        }
+        else{
+            alert('Wystąpił błąd przy dodawaniu modułu');
+        }
+        return moduleAdded;
+    });
+    return true;
+}
+async function addModuleToDatabase(courseId, name, description, orderNumber){
+    let data={
+        "course": courseId,
+        "name": name,
+        "description": description,
+        "order_number":orderNumber
+    };
+    let dataToPostJson=JSON.stringify(data);
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    try {
+
+        response = await fetch(`${appAddress}/items/Modules`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: dataToPostJson
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    console.log(response.statusText);
+    if (errorOccured || responseNotOkayFound) return false;
+    return true;
+}
+async function getModuleAsssignedToThisCourseLastOrderNumber(courseId) {
+    let modulesAssignedToThisCourse = await getModulesAssignedToThisCourse(courseId);
+    if (modulesAssignedToThisCourse == null) {
+        return -1;
+    }
+    else if (Object.keys(modulesAssignedToThisCourse).length == 0) {
+        return 0;
+    }
+    let maxOrderNumber = 0;
+    for (let key in modulesAssignedToThisCourse) {
+        if (Number(modulesAssignedToThisCourse[key]["order_number"]) > maxOrderNumber) {
+            maxOrderNumber = Number(modulesAssignedToThisCourse[key]["order_number"]);
+        }
+    }
+    return maxOrderNumber;
 
 }
 async function displayAllModules(courseId, containerToDisplay, containerForError) {
@@ -57,7 +208,8 @@ async function displayAllModules(courseId, containerToDisplay, containerForError
         return;
     }
     else if (Object.keys(modulesAssignedToThisCourse).length == 0) {
-        containerToDisplay.textContent = "Nie dodano jeszcze żadnego modułu";
+        let info=document.createTextNode("Nie dodano jeszcze żadnego modułu");
+        containerToDisplay.appendChild(info);
         return;
     }
 
@@ -126,8 +278,10 @@ async function displaySectionsWithCollapseManager(moduleElement, mainContainer) 
     aForCollapse.textContent = `${moduleElement["name"]}`; //wyswietl nazwę modułu
 
     let imgCollapse = document.createElement("img");
-    imgCollapse.setAttribute("src", "collapse-expand-icon-8.jpg");
+    imgCollapse.setAttribute("src", `${appAddress}/assets/1761ceff-5563-4b87-8c3d-631c9ec4351f?key=actual-size`);
     imgCollapse.setAttribute("alt", "icon-for-collapse");
+    imgCollapse.setAttribute("width", "20");
+    imgCollapse.setAttribute("height", "20");
     imgCollapse.setAttribute("id", "course-details-icon-for-collapse");
     aForCollapse.appendChild(imgCollapse);
 
@@ -190,45 +344,8 @@ async function displaySectionsWithCollapseManager(moduleElement, mainContainer) 
 }
 
 
-async function getModulesAssignedToThisCourse(courseId) {
-    let allModulesResponse = await getAllModules();
-    if (allModulesResponse == null) return null;
-    let json = await allModulesResponse.json();
-    let data = json.data;
-    let modulesAssignedToThisCourse = {};
-    if (data.length == 0) return modulesAssignedToThisCourse;
-    for (let i = 0; i < data.length; i++) {
-        if (data[i]["course"] == courseId) {
-            modulesAssignedToThisCourse[data[i]["order_number"]] = data[i];
-        }
-    }
-    return modulesAssignedToThisCourse;
 
-}
-async function getAllModules() {
-    let response;
-    let errorOccured = false;
-    let responseNotOkayFound = false;
-    try {
 
-        response = await fetch(`${appAddress}/items/Modules`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            }
-        });
-        if (!response.ok) responseNotOkayFound = true;
-
-    }
-    catch (err) {
-        console.error(`${err}`);
-        errorOccured = true;
-    }
-    console.log(response.statusText);
-    if (errorOccured || responseNotOkayFound) return null;
-    return response;
-}
 async function displayAllStudents(courseId, containerToDisplay, containerForError) {
     console.log(courseId);
     let numberOfBoxesChecked = 0;
@@ -242,7 +359,7 @@ async function displayAllStudents(courseId, containerToDisplay, containerForErro
     let tbody = document.createElement("tbody");
     tbody.setAttribute("id", `course-details-course-number-${courseId}-students-tbody`);
 
-    let buttonToDeleteManyStudents = id("admin-courses-delete-many-students");
+    let buttonToDeleteManyStudents = id("course-details-delete-many-students");
 
 
     for (let key in dataDictionary) {
@@ -262,6 +379,9 @@ async function displayAllStudents(courseId, containerToDisplay, containerForErro
         deleteButtonBox.appendChild(deleteButton);
         deleteButton.addEventListener('click', async function (e) {
             e.preventDefault();
+            console.log(dataDictionary[key]);
+            // console.log(key[0]);
+            // console.log(key[1]);
             await deleteStudentsManager(courseId, key, containerForError);
         })
         row.appendChild(deleteButtonBox);
@@ -372,7 +492,7 @@ async function findItemIdInjunction_directus_users_CoursesBased(courseId, studen
 }
 async function deleteStudentFromCourse(itemInjunction_directus_users_CoursesId, courseId, errorContainer) {
     let deleted = await deleteStudentFromCourseDatabase(itemInjunction_directus_users_CoursesId);
-    if (deleted) await updateCourseInfoConcerningStudentsNumber(courseId, errorContainer);
+    if (deleted) await updateCourseInfoConcerningStudentsNumber(courseId, errorContainer, 1);
     return deleted;
 }
 async function updateCourseInfoConcerningStudentsNumber(courseId, errorContainer, numberOfStudentsDeleted) {
@@ -404,4 +524,6 @@ async function deleteStudentFromCourseDatabase(itemInjunction_directus_users_Cou
     return true;
 
 }
-
+export{
+    addModuleManager
+}

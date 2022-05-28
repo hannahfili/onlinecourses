@@ -4,7 +4,9 @@ import {
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
     isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
     getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
-    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce
+    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
+    getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules, deleteTeacherFromCourse,
+    addFileElementManager
 } from './general-script.js';
 window.onload = (async function () {
     await addSectionDisplayManager();
@@ -161,8 +163,8 @@ function displayOptionToAddTextElement(newSectionId, firstSelect, errorContainer
 
 
     let containerForInput = id("add-section-add-text-element-display");
-    let inputPlace = document.createElement("input");
-    inputPlace.setAttribute("type", "textArea");
+    let inputPlace = document.createElement("textarea");
+    // inputPlace.setAttribute("type", "textArea");
     inputPlace.setAttribute("required", "");
     inputPlace.setAttribute("placeholder", "Element tekstowy...");
     inputPlace.setAttribute('id', `add-section-text-input-${lastSelectNumber + 1}`);
@@ -280,10 +282,12 @@ async function addSectionManager(errorContainer, sectionName, newSectionId, modu
     let elementsToAddToSection = getOrderNumbersAndValuesFromInputs(allFilesDivs, allTextsDivs);
     let createdSection= await createEmptySection(newSectionId, sectionName, moduleId, sectionOrderNumber);
     if(createdSection){
-        let elementsAddedCorrectly= await addElementsToSection(elementsToAddToSection, newSectionId);
+        let elementsAddedIncorrectly= await addElementsToSection(elementsToAddToSection, newSectionId);
+        if(!elementsAddedIncorrectly) alert('Pomyślnie dodano sekcję wraz z wszystkimi plikami');
+        window.location = "course-details.html";
     }
     else{
-
+        errorContainer.textContent = "Nie udało się dodać sekcji";
     }  
 }
 async function createEmptySection(sectionId, sectionName, moduleId, sectionOrderNumber, loggedInUserId=localStorage.getItem("loggedInUserId")){
@@ -323,6 +327,7 @@ async function createEmptySection(sectionId, sectionName, moduleId, sectionOrder
 }
 async function addElementsToSection(elementsDictionary, newSectionId){
     let errorContainer=id("add-section-form-errors");
+    let errorOccured=false;
     for(let key in elementsDictionary){
         let element=elementsDictionary[key];
         let elementType=element["type"];
@@ -337,13 +342,16 @@ async function addElementsToSection(elementsDictionary, newSectionId){
         }
         if(resultOfAdditionFile==false) {
             let textNodeToDisplayErrorAtAddingFile=document.createTextNode(`Wystąpił problem przy dodawaniu pliku o nazwie: ${element.name}`);
+            errorOccured=true;
             errorContainer.appendChild(textNodeToDisplayErrorAtAddingFile);
         }
         if(resultOfAdditionText==false) {
             let textNodeToDisplayErrorAtAddingText=document.createTextNode(`Wystąpił problem przy dodawaniu tekstu o początkowej treści: ${element.value.substring(20)}...`);
+            errorOccured=true;
             errorContainer.appendChild(textNodeToDisplayErrorAtAddingText);
         }
     }
+    return errorOccured;
 }
 async function addTextElementManager(element, sectionId, userCreated=localStorage.getItem("loggedInUserId")){
     //DODAC ID UZYTKOWNIKA!!!
@@ -377,76 +385,8 @@ async function addTextElementManager(element, sectionId, userCreated=localStorag
     if (errorOccured || responseNotOkayFound) return false;
     return true;
 }
-async function addFileElementManager(element, sectionId, userCreated=localStorage.getItem("loggedInUserId")){
-    
-    let fileAddedId=await uploadFile(element["value"], element["file_name"]);
-    if(fileAddedId==null){
-        return false;        
-    }
-    let valuesToAddFileElement={
-        "user_created": userCreated,
-        "order_number": element["order_number"],        
-        "section":sectionId,
-        "file": fileAddedId
-    }
-    let valuesJson=JSON.stringify(valuesToAddFileElement);
 
-    let errorOccured = false;
-    let responseNotOkayFound = false;
-    let responseJson;
 
-    try {
-        let response = await fetch(`${appAddress}/items/File_elements`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            },
-            body: valuesJson,
-        });
-        if (!response.ok) responseNotOkayFound = true;
-        console.log(response.statusText);
-        responseJson=await response.json();
-
-    } catch (error) {
-        console.log(error.message);
-        errorOccured = true;
-    }
-    if(errorOccured || responseNotOkayFound){
-        return false;
-    }
-    return true;
-}
-async function uploadFile(file, fileName){
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('filename_download', fileName);
-
-    let errorOccured = false;
-    let responseNotOkayFound = false;
-    let responseJson;
-
-    try {
-        let response = await fetch(`${appAddress}/files`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            },
-            body: formData,
-        });
-        if (!response.ok) responseNotOkayFound = true;
-        console.log(response.statusText);
-        responseJson=await response.json();
-
-    } catch (error) {
-        console.log(error.message);
-        errorOccured = true;
-    }
-    if(errorOccured || responseNotOkayFound){
-        return null;
-    }
-    return responseJson.data["id"];
-}
 function getOrderNumbersAndValuesFromInputs(allFilesDivs, allTextsDivs) {
     let allOrderNumbersAndInputValues = [];
     allFilesDivs.forEach(function (div) {
@@ -468,7 +408,7 @@ function getOrderNumbersAndValuesFromInputs(allFilesDivs, allTextsDivs) {
     allTextsDivs.forEach(function (div) {
         let children = div.children;
         let selectsChildren = [...children].filter((element) => element.tagName == "SELECT");
-        let textInputChildren = [...children].filter((element) => element.tagName == "INPUT");
+        let textInputChildren = [...children].filter((element) => element.tagName == "TEXTAREA");
         let textData={};
         if(textInputChildren[0].value!=''){
             textData["order_number"]=selectsChildren[0].value;

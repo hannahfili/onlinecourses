@@ -14,6 +14,7 @@ async function addStudentsToCourse(courseId = localStorage.getItem("courseIdToAd
 
     redirectToIndexIfUserIsNotLoggedInAdmin();
     let buttonReturn = id("addStudentsToCourse-return-button");
+    let buttonToReturnToShowCourseDetails=id("addStudentsToCourse-button-course-details");
     let buttonToAddManyStudents = id("addStudentsToCourse-add-many-students");
     let errorContainer = id("addStudentsToCourse-error-place");
     let studentsWhoAreNotAssignedToTheCourseIDs = await getStudentsFromStudentsCoursesJunctionTable(courseId, false, errorContainer);
@@ -61,6 +62,12 @@ async function addStudentsToCourse(courseId = localStorage.getItem("courseIdToAd
         e.preventDefault();
         window.location = "admin-courses.html";
     })
+    buttonToReturnToShowCourseDetails.addEventListener('click', function (e) {
+        e.preventDefault();
+        localStorage.setItem("courseIdToAddStudents", courseId);
+        window.location = "course-details.html";
+    })
+
 }
 async function getCourseFeatureById(courseId, featureName) {
     let response;

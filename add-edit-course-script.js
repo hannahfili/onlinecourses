@@ -2,13 +2,24 @@ import {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails, updateCourse, checkIfElementOccursInArrayMoreThanOnce
+    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails, updateCourse,
+    checkIfElementOccursInArrayMoreThanOnce, deleteTeacherFromCourse
 } from './general-script.js';
 
 //------------------------------------------------------
 //dotyczy addCourse.html
 let edit_course_form = id("edit-course-form");
 window.onload = (async function () {
+    let buttonAllCourses=id("edit-course-all-courses-button");
+    let buttonMainMenu=id("edit-course-main-menu-button");
+    buttonAllCourses.addEventListener('click', function(e){
+        e.preventDefault();
+        window.location="admin-courses.html";
+    });
+    buttonMainMenu.addEventListener('click', function(e){
+        e.preventDefault();
+        window.location="adminPanel.html";
+    })
     if (document.body.contains(document.getElementById('add-course-teacher-default'))) {
         await addCourseSetTeachersSelect(document.getElementById('add-course-teacher-default'));
     }
