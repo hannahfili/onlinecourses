@@ -596,5 +596,5 @@ export {
     getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
     updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
     getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules, deleteTeacherFromCourse,
-    addFileElementManager
+    addFileElementManager, checkIfUserIsLoggedIn, refreshToken
 };

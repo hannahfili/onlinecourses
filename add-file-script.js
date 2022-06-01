@@ -21,32 +21,29 @@ async function uploadFileManager(e) {
     const formData = new FormData();
     if (fileInput.files.length == 0) console.log("nie ma pliku");
 
-    // formData.append('title', 'My First File');
     formData.append('filename_disk', `${fileInput.files[0].name}`);
     formData.append('file', fileInput.files[0]);
-    formData.append('id', 'grubyfelek');
-    // console.log(fileInput.files[0].name);
 
     let errorOccured = false;
     let responseNotOkayFound = false;
 
-    // try {
-    //     let response = await fetch(`${appAddress}/files`, {
-    //         method: 'POST',
-    //         body: formData,
-    //     });
-    //     if (!response.ok) responseNotOkayFound = true;
-    //     console.log(response.statusText);
+    try {
+        let response = await fetch(`${appAddress}/files`, {
+            method: 'POST',
+            body: formData,
+        });
+        if (!response.ok) responseNotOkayFound = true;
+        console.log(response.statusText);
 
-    // } catch (error) {
-    //     console.log(error.message);
-    //     errorOccured = true;
+    } catch (error) {
+        console.log(error.message);
+        errorOccured = true;
 
-    // }
+    }
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", `${appAddress}/files`);
-    xhr.send(formData);
+    // var xhr = new XMLHttpRequest();
+    // xhr.open("POST", `${appAddress}/files`);
+    // xhr.send(formData);
 
 
     // await axios.post('/files', formData);
