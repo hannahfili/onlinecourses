@@ -68,6 +68,13 @@ window.onload = (async function () {
         window.location.reload();
     });
 
+    let buttonToLogOut=id("teacher-panel-log-out");
+    buttonToLogOut.addEventListener('click', async function (e) {
+        e.preventDefault();
+        await logOut();
+        window.location="index.html";
+    });
+
 
 
 });
@@ -1153,7 +1160,7 @@ async function getAllTeachersShiftsOrAppointments(whatToGet, teacherId = localSt
     let thisTeacherShifts = responseData.filter(n => n.teacher == teacherId);
     return thisTeacherShifts;
 }
-function displayDate(date, formatWithDash = false) {
+function displayDate(date, formatWithDash = false, datetime = false) {
     const yyyy = date.getFullYear();
     let mm = date.getMonth() + 1; // Months start at 0!
     let dd = date.getDate();
@@ -1163,7 +1170,17 @@ function displayDate(date, formatWithDash = false) {
 
     let dateToDisplay = dd + '.' + mm + '.' + yyyy;
     if (formatWithDash) dateToDisplay = yyyy + '-' + mm + '-' + dd;
+    if (datetime) {
+        let hr = date.getHours();
+        let min = date.getMinutes();
+        let sec = date.getSeconds();
 
+        if (hr < 10) hr = '0' + hr;
+        if (min < 10) min = '0' + min;
+        if (sec < 10) sec = '0' + sec;
+
+        dateToDisplay = dateToDisplay + "T" + hr + ":" + min + ":" + sec;
+    }
     return dateToDisplay;
 }
 function setMondayAndSaturdayForThisWeek(numberOfWeeksToAddOrRemove = 0) {

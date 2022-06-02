@@ -2,7 +2,11 @@ import {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers
+    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
+    getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
+    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
+    getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules, deleteTeacherFromCourse,
+    addFileElementManager, checkIfUserIsLoggedIn, refreshToken, getUserInfo, updateUserData
 } from './general-script.js';
 //dotyczy pliku addUser.html
 let add_user_form = id("add-user-form");
@@ -214,29 +218,4 @@ async function setEditUserDefaultFields() {
     console.log("set edit refresh: ", localStorage.getItem("refresh_token"));
 
 
-}
-async function updateUserData(userId, fieldName, fieldValue, actualizationName) {
-    console.log(actualizationName);
-    await redirectToIndexIfUserIsNotLoggedInAdmin();
-    let response;
-    try {
-        response = await fetch(`${appAddress}/users/${userId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            },
-            body: `{
-                "${fieldName}": "${fieldValue}"
-            }`
-        });
-    }
-    catch (err) {
-        alert(err);
-        console.error(`${err}`)
-    }
-    // console.log(response.statusText);
-    // let json = await response.json();
-    // console.log(JSON.stringify(json));
-    return response;
 }

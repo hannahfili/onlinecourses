@@ -613,6 +613,31 @@ async function getUserInfo(userId) {
     let responseData = responseJson.data;
     return responseData;
 }
+async function updateUserData(userId, fieldName, fieldValue, actualizationName) {
+    console.log(actualizationName);
+    // await redirectToIndexIfUserIsNotLoggedInAdmin();
+    let response;
+    try {
+        response = await fetch(`${appAddress}/users/${userId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: `{
+                "${fieldName}": "${fieldValue}"
+            }`
+        });
+    }
+    catch (err) {
+        alert(err);
+        console.error(`${err}`)
+    }
+    // console.log(response.statusText);
+    // let json = await response.json();
+    // console.log(JSON.stringify(json));
+    return response;
+}
 export {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
@@ -621,5 +646,5 @@ export {
     getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
     updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
     getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules, deleteTeacherFromCourse,
-    addFileElementManager, checkIfUserIsLoggedIn, refreshToken, getUserInfo
+    addFileElementManager, checkIfUserIsLoggedIn, refreshToken, getUserInfo, updateUserData
 };

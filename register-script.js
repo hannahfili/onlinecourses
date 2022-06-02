@@ -4,6 +4,8 @@ import {
     checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
     isolateParticularGroupOfUsersFromAllUsers
 } from './general-script.js';
+import { displayDate } from './teacher-panel-script.js';
+
 let register_form = id("register-form");
 if (register_form) {
     register_form.addEventListener("submit", function (e) {
@@ -15,6 +17,10 @@ async function registerManager(e) {
 
     let response = false;
     let output = validateRegistrationData();
+    let email=id("register-email");
+    let password=id("register-password");
+
+    let passwordErrorTwoRegister=id("register-password2-error");
 
     if (output === true) {
         //utworz konto
@@ -37,12 +43,12 @@ async function registerManager(e) {
 }
 function validateRegistrationData() {
     let output = true;
-    let email = id("email");
-    let password = id("password");
-    let password2 = id("password-2");
-    let emailErrorRegister = id("email-error");
-    let passwordErrorOneRegister = id("password-error");
-    let passwordErrorTwoRegister = id("password2-error");
+    let email = id("register-email");
+    let password = id("register-password");
+    let password2 = id("register-password-2");
+    let emailErrorRegister = id("register-email-error");
+    let passwordErrorOneRegister = id("register-password-error");
+    let passwordErrorTwoRegister = id("register-password2-error");
 
     if (!validateEmail(email.value, emailErrorRegister)) {
         output = false;
@@ -67,22 +73,28 @@ async function createAccount(email, password, studentAccount = true) {
 
     // alert("rola studenta: ", roleId);
     // alert("rola tutejsza:", roleId);
+    // 2022-07-02T23:59:00
 
     let response;
     const date = new Date();
     let initialPlatformAccessTimeout = new Date(date.setDate(date.getDate() + 30));
-    let initialPlatformAccessTimeoutAsString = JSON.stringify(initialPlatformAccessTimeout);
+    console.log(initialPlatformAccessTimeout);
+    let initialPlatformAccessTimeoutAsString = displayDate(initialPlatformAccessTimeout,true, true);
     console.log(initialPlatformAccessTimeoutAsString);
+
+    let dataToPost={
+        "email": email,
+        "password": password,
+        "role": roleId,
+        "platform_access_timeout": initialPlatformAccessTimeoutAsString,
+        "balance":30
+    }
+    let dataToPostJson=JSON.stringify(dataToPost);
     try {
         response = await fetch(`${appAddress}/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: `{
-           "email": "${email}",
-           "password": "${password}",
-           "role": "${roleId}",
-           "platform_access_timeout": ${initialPlatformAccessTimeoutAsString}
-          }`,
+            body: dataToPostJson
         });
     }
     catch (err) {
