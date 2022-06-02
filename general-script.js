@@ -588,6 +588,31 @@ async function uploadFile(file, fileName){
     }
     return responseJson.data["id"];
 }
+async function getUserInfo(userId) {
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    try {
+
+        response = await fetch(`${appAddress}/users/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+        if (!response.ok) responseNotOkayFound = true;
+
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (errorOccured || responseNotOkayFound) return null;
+    let responseJson = await response.json();
+    let responseData = responseJson.data;
+    return responseData;
+}
 export {
     id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
     validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
@@ -596,5 +621,5 @@ export {
     getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
     updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
     getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules, deleteTeacherFromCourse,
-    addFileElementManager, checkIfUserIsLoggedIn, refreshToken
+    addFileElementManager, checkIfUserIsLoggedIn, refreshToken, getUserInfo
 };

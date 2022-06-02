@@ -32,330 +32,339 @@
             </ul>
         </div>
     </nav>
-    <script type="module" src="teacher-panel-script.js"></script>
-</body>
-<div id="teacher-panel-main-container">
 
-    <div id="teacher-panel-week-timetable" style="visibility: hidden">
-        <input id="teacher-panel-previous-week-button" type="image"
-            src="https://3qyn4234.directus.app/assets/af4e8886-cb77-47d4-accd-8506bde5e269?key=actual-size" />
-        <input id="teacher-panel-next-week-button" type="image"
-            src="https://3qyn4234.directus.app/assets/eb022782-c955-4598-ab4c-2152c5b96af0?key=actual-size" />
 
-        <div id="teacher-panel-week-name">
+    <div id="teacher-panel-main-container">
+
+        <div id="teacher-panel-week-timetable" style="visibility: hidden">
+            <input id="teacher-panel-previous-week-button" type="image"
+                src="https://3qyn4234.directus.app/assets/af4e8886-cb77-47d4-accd-8506bde5e269?key=actual-size" />
+            <input id="teacher-panel-next-week-button" type="image"
+                src="https://3qyn4234.directus.app/assets/eb022782-c955-4598-ab4c-2152c5b96af0?key=actual-size" />
+
+            <div id="teacher-panel-week-name">
+            </div>
+            <table id="teacher-panel-week-timetable-table" class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th class="" id="teacher-panel-week-hours">Godziny</th>
+                        <th class="teacher-panel-week-day" id="teacher-panel-week-monday">Poniedziałek</th>
+                        <th class="teacher-panel-week-day" id="teacher-panel-week-tuesday">Wtorek</th>
+                        <th class="teacher-panel-week-day" id="teacher-panel-week-wednesday">Środa</th>
+                        <th class="teacher-panel-week-day" id="teacher-panel-week-thursday">Czwartek</th>
+                        <th class="teacher-panel-week-day" id="teacher-panel-week-friday">Piątek</th>
+                        <th class="teacher-panel-week-day" id="teacher-panel-week-saturday">Sobota</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-1">8:00 -
+                            9:30
+                        </td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-1"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-1"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-1"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-1"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-1"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-1"></td>
+                    </tr>
+                    <tr>
+                        <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-2">9:45 -
+                            11:15
+                        </td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-2"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-2"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-2"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-2"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-2"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-2"></td>
+                    </tr>
+                    <tr>
+                        <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-3">11:30 -
+                            13:00
+                        </td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-3"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-3"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-3"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-3"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-3"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-3"></td>
+                    </tr>
+                    <tr>
+                        <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-4">13:15 -
+                            14:45
+                        </td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-4"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-4"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-4"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-4"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-4"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-4"></td>
+                    </tr>
+                    <tr>
+                        <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-1">15:00 -
+                            16:30
+                        </td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-5"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-5"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-5"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-5"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-5"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-5"></td>
+                    </tr>
+                    <tr>
+                        <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-6">16:45 -
+                            18:15
+                        </td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-6"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-6"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-6"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-6"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-6"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-6"></td>
+                    </tr>
+                    <tr>
+                        <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-7">18:30 -
+                            20:00
+                        </td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-7"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-7"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-7"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-7"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-7"></td>
+                        <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-7"></td>
+                    </tr>
+                </tbody>
+
+            </table>
         </div>
-        <table id="teacher-panel-week-timetable-table" class="table table-bordered">
-            <thead>
-                <tr>
-                    <th class="" id="teacher-panel-week-hours">Godziny</th>
-                    <th class="teacher-panel-week-day" id="teacher-panel-week-monday">Poniedziałek</th>
-                    <th class="teacher-panel-week-day" id="teacher-panel-week-tuesday">Wtorek</th>
-                    <th class="teacher-panel-week-day" id="teacher-panel-week-wednesday">Środa</th>
-                    <th class="teacher-panel-week-day" id="teacher-panel-week-thursday">Czwartek</th>
-                    <th class="teacher-panel-week-day" id="teacher-panel-week-friday">Piątek</th>
-                    <th class="teacher-panel-week-day" id="teacher-panel-week-saturday">Sobota</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-1">8:00 - 9:30
-                    </td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-1"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-1"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-1"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-1"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-1"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-1"></td>
-                </tr>
-                <tr>
-                    <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-2">9:45 - 11:15
-                    </td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-2"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-2"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-2"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-2"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-2"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-2"></td>
-                </tr>
-                <tr>
-                    <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-3">11:30 - 13:00
-                    </td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-3"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-3"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-3"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-3"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-3"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-3"></td>
-                </tr>
-                <tr>
-                    <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-4">13:15 - 14:45
-                    </td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-4"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-4"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-4"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-4"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-4"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-4"></td>
-                </tr>
-                <tr>
-                    <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-1">15:00 - 16:30
-                    </td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-5"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-5"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-5"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-5"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-5"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-5"></td>
-                </tr>
-                <tr>
-                    <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-6">16:45 - 18:15
-                    </td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-6"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-6"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-6"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-6"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-6"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-6"></td>
-                </tr>
-                <tr>
-                    <td class="teacher-panel-week-day-indicator-hour" id="teacher-panel-timetable-hour-7">18:30 - 20:00
-                    </td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-monday-7"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-tuesday-7"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-wednesday-7"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-thursday-7"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-friday-7"></td>
-                    <td class="teacher-panel-week-day-indicator" id="teacher-panel-timetable-saturday-7"></td>
-                </tr>
-            </tbody>
 
-        </table>
-    </div>
+        <div id="teacher-panel-shift-form" style="visibility: hidden">
 
-    <div id="teacher-panel-shift-form" style="visibility: hidden">
-
-        <div id="teacher-panel-choose-shift-type-form">
-            <button id="teacher-panel-month-shift-button">Ustaw dyżur miesięczny</button>
-            <button id="teacher-panel-one-time-shift-button">Ustaw dyżur jednorazowy</button>
-            <button id="teacher-panel-delete-shift-from-particular-date-button">Usuń wszystkie dyżury z danego
-                dnia</button>
+            <div id="teacher-panel-choose-shift-type-form">
+                <button id="teacher-panel-month-shift-button">Ustaw dyżur miesięczny</button>
+                <button id="teacher-panel-one-time-shift-button">Ustaw dyżur jednorazowy</button>
+                <button id="teacher-panel-delete-shift-from-particular-date-button">Usuń wszystkie dyżury z danego
+                    dnia</button>
                 <button id="teacher-panel-delete-shift-from-particular-month-button">Usuń wszystkie dyżury z danego
                     miesiąca</button>
+            </div>
+
+
+            <div id="teacher-panel-form-for-month-shift" style="visibility: hidden">
+                <div id="teacher-panel-form-for-month-shift-upper-panel">
+                    DYŻUR MIESIĘCZNY
+                </div>
+                <label for="teacher-panel-form-for-month-shift-month-choice">Wybierz miesiąc:</label>
+                <select id="teacher-panel-form-for-month-shift-month-choice">
+                    <!-- dynamiczne ładowanie nazw miesięcy -->
+                </select>
+                <div id="teacher-panel-form-for-month-shift-monday-setup">
+                    <div id="teacher-panel-form-for-month-shift-monday-setup-day-name">Poniedziałek</div>
+
+                    <label for="teacher-panel-form-for-month-shift-monday-setup-start-hour">Godzina rozpoczęcia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-monday-setup-start-hour"
+                        id="teacher-panel-form-for-month-shift-monday-setup-start-hour">
+                        <option value="none">-</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:45">09:45</option>
+                        <option value="11:30">11:30</option>
+                        <option value="13:15">13:15</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:45">16:45</option>
+                        <option value="18:30">18:30</option>
+                    </select>
+                    <label for="teacher-panel-form-for-month-shift-monday-setup-end-hour">Godzina zakończenia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-monday-setup-end-hour"
+                        id="teacher-panel-form-for-month-shift-monday-setup-end-hour">
+                        <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
+                    </select>
+                </div>
+                <div id="teacher-panel-form-for-month-shift-tuesday-setup">
+                    <div id="teacher-panel-form-for-month-shift-tuesday-setup-day-name">Wtorek</div>
+
+                    <label for="teacher-panel-form-for-month-shift-tuesday-setup-start-hour">Godzina rozpoczęcia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-tuesday-setup-start-hour"
+                        id="teacher-panel-form-for-month-shift-tuesday-setup-start-hour">
+                        <option value="none">-</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:45">09:45</option>
+                        <option value="11:30">11:30</option>
+                        <option value="13:15">13:15</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:45">16:45</option>
+                        <option value="18:30">18:30</option>
+                    </select>
+
+                    <label for="teacher-panel-form-for-month-shift-tuesday-setup-end-hour">Godzina zakończenia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-tuesday-setup-end-hour"
+                        id="teacher-panel-form-for-month-shift-tuesday-setup-end-hour">
+                        <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
+                    </select>
+                </div>
+                <div id="teacher-panel-form-for-month-shift-wednesday-setup">
+                    <div id="teacher-panel-form-for-month-shift-wednesday-setup-day-name">Środa</div>
+                    <label for="teacher-panel-form-for-month-shift-wednesday-setup-start-hour">Godzina rozpoczęcia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-wednesday-setup-start-hour"
+                        id="teacher-panel-form-for-month-shift-wednesday-setup-start-hour">
+                        <option value="none">-</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:45">09:45</option>
+                        <option value="11:30">11:30</option>
+                        <option value="13:15">13:15</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:45">16:45</option>
+                        <option value="18:30">18:30</option>
+                    </select>
+                    <label for="teacher-panel-form-for-month-shift-wednesday-setup-end-hour">Godzina zakończenia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-wednesday-setup-end-hour"
+                        id="teacher-panel-form-for-month-shift-wednesday-setup-end-hour">
+                        <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
+                    </select>
+                </div>
+                <div id="teacher-panel-form-for-month-shift-thursday-setup">
+                    <div id="teacher-panel-form-for-month-shift-thursday-setup-day-name">Czwartek</div>
+                    <label for="teacher-panel-form-for-month-shift-thursday-setup-start-hour">Godzina rozpoczęcia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-thursday-setup-start-hour"
+                        id="teacher-panel-form-for-month-shift-thursday-setup-start-hour">
+                        <option value="none">-</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:45">09:45</option>
+                        <option value="11:30">11:30</option>
+                        <option value="13:15">13:15</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:45">16:45</option>
+                        <option value="18:30">18:30</option>
+                    </select>
+                    <label for="teacher-panel-form-for-month-shift-thursday-setup-end-hour">Godzina zakończenia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-thursday-setup-end-hour"
+                        id="teacher-panel-form-for-month-shift-thursday-setup-end-hour">
+                        <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
+                    </select>
+                </div>
+                <div id="teacher-panel-form-for-month-shift-friday-setup">
+                    <div id="teacher-panel-form-for-month-shift-friday-setup-day-name">Piatek</div>
+                    <label for="teacher-panel-form-for-month-shift-friday-setup-start-hour">Godzina rozpoczęcia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-friday-setup-start-hour"
+                        id="teacher-panel-form-for-month-shift-friday-setup-start-hour">
+                        <option value="none">-</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:45">09:45</option>
+                        <option value="11:30">11:30</option>
+                        <option value="13:15">13:15</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:45">16:45</option>
+                        <option value="18:30">18:30</option>
+                    </select>
+                    <label for="teacher-panel-form-for-month-shift-friday-setup-end-hour">Godzina zakończenia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-friday-setup-end-hour"
+                        id="teacher-panel-form-for-month-shift-friday-setup-end-hour">
+                        <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
+                    </select>
+                </div>
+                <div id="teacher-panel-form-for-month-shift-saturday-setup">
+                    <div id="teacher-panel-form-for-month-shift-saturday-setup-day-name">Sobota</div>
+                    <label for="teacher-panel-form-for-month-shift-saturday-setup-start-hour">Godzina rozpoczęcia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-saturday-setup-start-hour"
+                        id="teacher-panel-form-for-month-shift-saturday-setup-start-hour">
+                        <option value="none">-</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:45">09:45</option>
+                        <option value="11:30">11:30</option>
+                        <option value="13:15">13:15</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:45">16:45</option>
+                        <option value="18:30">18:30</option>
+                    </select>
+                    <label for="teacher-panel-form-for-month-shift-saturday-setup-end-hour">Godzina zakończenia
+                        dyżuru:</label>
+                    <select name="teacher-panel-form-for-month-shift-saturday-setup-end-hour"
+                        id="teacher-panel-form-for-month-shift-saturday-setup-end-hour">
+                        <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
+                    </select>
+                    <div id="teacher-panel-form-for-month-shift-error-container"></div>
+                </div>
+
+
+
+                <button id="teacher-panel-form-for-month-shift-submit-button">Zapisz dyżur miesięczny</button>
+                <button id="teacher-panel-form-for-month-shift-return-button">Powrót</button>
+
+            </div>
+            <div id="teacher-panel-form-for-one-time-shift" style="visibility: hidden">
+                <div id="teacher-panel-form-for-one-time-shift-upper-panel">
+                    DYŻUR JEDNORAZOWY
+                </div>
+                <label for="teacher-panel-form-for-one-time-shift-date-choice">Data dyżuru:</label>
+
+                <input type="date" id="teacher-panel-form-for-one-time-shift-date-choice"
+                    name="teacher-panel-form-for-one-time-shift-date-choice">
+
+                <label for="teacher-panel-form-for-one-time-shift-select-start-time">Godzina rozpoczęcia dyżuru:</label>
+                <select name="teacher-panel-form-for-one-time-shift-select-start-time"
+                    id="teacher-panel-form-for-one-time-shift-select-start-time">
+                    <option value="none">-</option>
+                    <option value="08:00">08:00</option>
+                    <option value="09:45">09:45</option>
+                    <option value="11:30">11:30</option>
+                    <option value="13:15">13:15</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:45">16:45</option>
+                    <option value="18:30">18:30</option>
+                </select>
+                <label for="teacher-panel-form-for-one-time-shift-select-end-time">Godzina rozpoczęcia dyżuru:</label>
+                <select name="teacher-panel-form-for-one-time-shift-select-end-time"
+                    id="teacher-panel-form-for-one-time-shift-select-end-time">
+                    <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
+                </select>
+
+                <input type="checkbox" id="teacher-panel-form-for-one-time-shift-checkbox-for-delete"
+                    name="teacher-panel-form-for-one-time-shift-checkbox-for-delete">
+                <label for="teacher-panel-form-for-one-time-shift-checkbox-for-delete"> Usuń istniejące dyżury z tego
+                    dnia</label><br>
+
+                <button id="teacher-panel-form-for-one-time-shift-submit-button">Zapisz dyżur jednorazowy</button>
+                <button id="teacher-panel-form-for-one-time-shift-return-button">Powrót</button>
+                <div id="teacher-panel-form-for-one-time-shift-error-container" class="error"></div>
+            </div>
+
+            <div id="teacher-panel-form-for-delete-shift" style="visibility: hidden">
+                <label for="teacher-panel-form-for-delete-shift-date-choice">Data dyżuru:</label>
+
+                <input type="date" id="teacher-panel-form-for-delete-shift-date-choice"
+                    name="teacher-panel-form-for-delete-shift-date-choice">
+
+                <button id="teacher-panel-form-for-delete-shift-submit-button">Usuń dyżur</button>
+            </div>
+            <div id="teacher-panel-form-for-delete-shift-month" style="visibility: hidden">
+                <label for="teacher-panel-form-for-delete-shift-month-select">Data dyżuru:</label>
+
+                <select name="teacher-panel-form-for-delete-shift-month-select"
+                    id="teacher-panel-form-for-delete-shift-month-select">
+                    <!-- DYNAMICZNE ŁADOWANIE NAZW MIESIĘCY -->
+                </select>
+
+                <button id="teacher-panel-form-for-delete-shift-month-submit-button">Usuń dyżur</button>
+            </div>
+
+
+
+
         </div>
-
-
-        <div id="teacher-panel-form-for-month-shift" style="visibility: hidden">
-            <div id="teacher-panel-form-for-month-shift-upper-panel">
-                DYŻUR MIESIĘCZNY
-            </div>
-            <label for="teacher-panel-form-for-month-shift-month-choice">Wybierz miesiąc:</label>
-            <select id="teacher-panel-form-for-month-shift-month-choice">
-                <!-- dynamiczne ładowanie nazw miesięcy -->
-            </select>
-            <div id="teacher-panel-form-for-month-shift-monday-setup">
-                <div id="teacher-panel-form-for-month-shift-monday-setup-day-name">Poniedziałek</div>
-
-                <label for="teacher-panel-form-for-month-shift-monday-setup-start-hour">Godzina rozpoczęcia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-monday-setup-start-hour"
-                    id="teacher-panel-form-for-month-shift-monday-setup-start-hour">
-                    <option value="none">-</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:45">09:45</option>
-                    <option value="11:30">11:30</option>
-                    <option value="13:15">13:15</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:45">16:45</option>
-                    <option value="18:30">18:30</option>
-                </select>
-                <label for="teacher-panel-form-for-month-shift-monday-setup-end-hour">Godzina zakończenia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-monday-setup-end-hour"
-                    id="teacher-panel-form-for-month-shift-monday-setup-end-hour">
-                    <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
-                </select>
-            </div>
-            <div id="teacher-panel-form-for-month-shift-tuesday-setup">
-                <div id="teacher-panel-form-for-month-shift-tuesday-setup-day-name">Wtorek</div>
-
-                <label for="teacher-panel-form-for-month-shift-tuesday-setup-start-hour">Godzina rozpoczęcia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-tuesday-setup-start-hour"
-                    id="teacher-panel-form-for-month-shift-tuesday-setup-start-hour">
-                    <option value="none">-</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:45">09:45</option>
-                    <option value="11:30">11:30</option>
-                    <option value="13:15">13:15</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:45">16:45</option>
-                    <option value="18:30">18:30</option>
-                </select>
-
-                <label for="teacher-panel-form-for-month-shift-tuesday-setup-end-hour">Godzina zakończenia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-tuesday-setup-end-hour"
-                    id="teacher-panel-form-for-month-shift-tuesday-setup-end-hour">
-                    <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
-                </select>
-            </div>
-            <div id="teacher-panel-form-for-month-shift-wednesday-setup">
-                <div id="teacher-panel-form-for-month-shift-wednesday-setup-day-name">Środa</div>
-                <label for="teacher-panel-form-for-month-shift-wednesday-setup-start-hour">Godzina rozpoczęcia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-wednesday-setup-start-hour"
-                    id="teacher-panel-form-for-month-shift-wednesday-setup-start-hour">
-                    <option value="none">-</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:45">09:45</option>
-                    <option value="11:30">11:30</option>
-                    <option value="13:15">13:15</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:45">16:45</option>
-                    <option value="18:30">18:30</option>
-                </select>
-                <label for="teacher-panel-form-for-month-shift-wednesday-setup-end-hour">Godzina zakończenia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-wednesday-setup-end-hour"
-                    id="teacher-panel-form-for-month-shift-wednesday-setup-end-hour">
-                    <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
-                </select>
-            </div>
-            <div id="teacher-panel-form-for-month-shift-thursday-setup">
-                <div id="teacher-panel-form-for-month-shift-thursday-setup-day-name">Czwartek</div>
-                <label for="teacher-panel-form-for-month-shift-thursday-setup-start-hour">Godzina rozpoczęcia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-thursday-setup-start-hour"
-                    id="teacher-panel-form-for-month-shift-thursday-setup-start-hour">
-                    <option value="none">-</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:45">09:45</option>
-                    <option value="11:30">11:30</option>
-                    <option value="13:15">13:15</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:45">16:45</option>
-                    <option value="18:30">18:30</option>
-                </select>
-                <label for="teacher-panel-form-for-month-shift-thursday-setup-end-hour">Godzina zakończenia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-thursday-setup-end-hour"
-                    id="teacher-panel-form-for-month-shift-thursday-setup-end-hour">
-                    <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
-                </select>
-            </div>
-            <div id="teacher-panel-form-for-month-shift-friday-setup">
-                <div id="teacher-panel-form-for-month-shift-friday-setup-day-name">Piatek</div>
-                <label for="teacher-panel-form-for-month-shift-friday-setup-start-hour">Godzina rozpoczęcia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-friday-setup-start-hour"
-                    id="teacher-panel-form-for-month-shift-friday-setup-start-hour">
-                    <option value="none">-</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:45">09:45</option>
-                    <option value="11:30">11:30</option>
-                    <option value="13:15">13:15</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:45">16:45</option>
-                    <option value="18:30">18:30</option>
-                </select>
-                <label for="teacher-panel-form-for-month-shift-friday-setup-end-hour">Godzina zakończenia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-friday-setup-end-hour"
-                    id="teacher-panel-form-for-month-shift-friday-setup-end-hour">
-                    <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
-                </select>
-            </div>
-            <div id="teacher-panel-form-for-month-shift-saturday-setup">
-                <div id="teacher-panel-form-for-month-shift-saturday-setup-day-name">Sobota</div>
-                <label for="teacher-panel-form-for-month-shift-saturday-setup-start-hour">Godzina rozpoczęcia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-saturday-setup-start-hour"
-                    id="teacher-panel-form-for-month-shift-saturday-setup-start-hour">
-                    <option value="none">-</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:45">09:45</option>
-                    <option value="11:30">11:30</option>
-                    <option value="13:15">13:15</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:45">16:45</option>
-                    <option value="18:30">18:30</option>
-                </select>
-                <label for="teacher-panel-form-for-month-shift-saturday-setup-end-hour">Godzina zakończenia
-                    dyżuru:</label>
-                <select name="teacher-panel-form-for-month-shift-saturday-setup-end-hour"
-                    id="teacher-panel-form-for-month-shift-saturday-setup-end-hour">
-                    <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
-                </select>
-                <div id="teacher-panel-form-for-month-shift-error-container"></div>
-            </div>
-
-
-
-            <button id="teacher-panel-form-for-month-shift-submit-button">Zapisz dyżur miesięczny</button>
-            <button id="teacher-panel-form-for-month-shift-return-button">Powrót</button>
-
-        </div>
-        <div id="teacher-panel-form-for-one-time-shift" style="visibility: hidden">
-            <div id="teacher-panel-form-for-one-time-shift-upper-panel">
-                DYŻUR JEDNORAZOWY
-            </div>
-            <label for="teacher-panel-form-for-one-time-shift-date-choice">Data dyżuru:</label>
-
-            <input type="date" id="teacher-panel-form-for-one-time-shift-date-choice"
-                name="teacher-panel-form-for-one-time-shift-date-choice">
-
-            <label for="teacher-panel-form-for-one-time-shift-select-start-time">Godzina rozpoczęcia dyżuru:</label>
-            <select name="teacher-panel-form-for-one-time-shift-select-start-time"
-                id="teacher-panel-form-for-one-time-shift-select-start-time">
-                <option value="none">-</option>
-                <option value="08:00">08:00</option>
-                <option value="09:45">09:45</option>
-                <option value="11:30">11:30</option>
-                <option value="13:15">13:15</option>
-                <option value="15:00">15:00</option>
-                <option value="16:45">16:45</option>
-                <option value="18:30">18:30</option>
-            </select>
-            <label for="teacher-panel-form-for-one-time-shift-select-end-time">Godzina rozpoczęcia dyżuru:</label>
-            <select name="teacher-panel-form-for-one-time-shift-select-end-time"
-                id="teacher-panel-form-for-one-time-shift-select-end-time">
-                <!-- ładowanie dynamiczne opcji na podstawie godziny rozpoczęcia -->
-            </select>
-
-            <input type="checkbox" id="teacher-panel-form-for-one-time-shift-checkbox-for-delete"
-                name="teacher-panel-form-for-one-time-shift-checkbox-for-delete">
-            <label for="teacher-panel-form-for-one-time-shift-checkbox-for-delete"> Usuń istniejące dyżury z tego
-                dnia</label><br>
-
-            <button id="teacher-panel-form-for-one-time-shift-submit-button">Zapisz dyżur jednorazowy</button>
-            <button id="teacher-panel-form-for-one-time-shift-return-button">Powrót</button>
-            <div id="teacher-panel-form-for-one-time-shift-error-container" class="error"></div>
-        </div>
-
-        <div id="teacher-panel-form-for-delete-shift" style="visibility: hidden">
-            <label for="teacher-panel-form-for-delete-shift-date-choice">Data dyżuru:</label>
-
-            <input type="date" id="teacher-panel-form-for-delete-shift-date-choice"
-                name="teacher-panel-form-for-delete-shift-date-choice">
-
-            <button id="teacher-panel-form-for-delete-shift-submit-button">Usuń dyżur</button>
-        </div>
-        <div id="teacher-panel-form-for-delete-shift-month" style="visibility: hidden">
-            <label for="teacher-panel-form-for-delete-shift-month-select">Data dyżuru:</label>
-
-            <select name="teacher-panel-form-for-delete-shift-month-select"
-                id="teacher-panel-form-for-delete-shift-month-select">
-                <!-- DYNAMICZNE ŁADOWANIE NAZW MIESIĘCY -->
-            </select>
-
-            <button id="teacher-panel-form-for-delete-shift-month-submit-button">Usuń dyżur</button>
-        </div>
-
-
-
 
     </div>
-
-</div>
+    <script type="module" src="teacher-panel-script.js"></script>
+</body>
 
 </html>
