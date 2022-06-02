@@ -6,8 +6,12 @@ import {
     getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
     updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
     getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules, deleteTeacherFromCourse,
-    addFileElementManager, checkIfUserIsLoggedIn, refreshToken
+    addFileElementManager, checkIfUserIsLoggedIn, refreshToken, getUserInfo
 } from './general-script.js';
+import {
+    addMeetingManager
+}
+    from './student-panel-script.js';
 
 // import DateTime from 'luxon/src/datetime.js';
 
@@ -77,7 +81,7 @@ async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd) {
     let divMonthShiftForm = id("teacher-panel-form-for-month-shift");
     let divOneTimeShiftForm = id("teacher-panel-form-for-one-time-shift");
     let divDeleteOneDayShiftForm = id("teacher-panel-form-for-delete-shift");
-    let divDeleteMonthShiftForm=id("teacher-panel-form-for-delete-shift-month");
+    let divDeleteMonthShiftForm = id("teacher-panel-form-for-delete-shift-month");
 
 
     buttonMonthShiftForm.addEventListener('click', async function (e) {
@@ -129,15 +133,15 @@ async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd) {
     });
 }
 
-async function deleteManyShiftsManager(){
-    let selectForMonth=id("teacher-panel-form-for-delete-shift-month-select");
+async function deleteManyShiftsManager() {
+    let selectForMonth = id("teacher-panel-form-for-delete-shift-month-select");
     setMonthsToChoose(selectForMonth, 'teacher-panel-form-for-delete-shift-month-select-option-');
 
-    let submitButton=id("teacher-panel-form-for-delete-shift-month-submit-button");
+    let submitButton = id("teacher-panel-form-for-delete-shift-month-submit-button");
     submitButton.addEventListener('click', async function (e) {
         e.preventDefault();
-        let deleted=await deleteManyShiftsFromDatabase(selectForMonth.value);
-        if(deleted){
+        let deleted = await deleteManyShiftsFromDatabase(selectForMonth.value);
+        if (deleted) {
             alert('Usunięto dyżury z wybranego miesiąca');
             localStorage.setItem("setMainContainerToShiftForm", true);
             window.location.reload();
@@ -145,37 +149,37 @@ async function deleteManyShiftsManager(){
         else alert('BŁĄD SERWERA. Nie udało się usunąć dyżurów z wybranego miesiąca');
     });
 }
-async function deleteManyShiftsFromDatabase(monthSelected, teacher=localStorage.getItem("loggedInUserId")){
-let allShifts= await getAllTeachersShifts(teacher);
-let shiftsForChosenMonth=allShifts.filter(shift=>new Date(shift.date).getMonth()==monthSelected);
-console.log(shiftsForChosenMonth);
-let idsToDelete=[];
-shiftsForChosenMonth.forEach(function(shift){
-    idsToDelete.push(shift.id);
-});
-
-let bodyToDelete = JSON.stringify(idsToDelete);
-
-let response;
-let responseNotOkayFound = false;
-let errorOccured = false;
-try {
-    response = await fetch(`${appAddress}/items/Shifts`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-        },
-        body: bodyToDelete
+async function deleteManyShiftsFromDatabase(monthSelected, teacher = localStorage.getItem("loggedInUserId")) {
+    let allShifts = await getAllTeachersShiftsOrAppointments("Shifts", teacher);
+    let shiftsForChosenMonth = allShifts.filter(shift => new Date(shift.date).getMonth() == monthSelected);
+    console.log(shiftsForChosenMonth);
+    let idsToDelete = [];
+    shiftsForChosenMonth.forEach(function (shift) {
+        idsToDelete.push(shift.id);
     });
-    if (!response.ok) responseNotOkayFound = true;
-}
-catch (err) {
-    errorOccured = true;
-    console.error(`${err}`);
-}
-if (responseNotOkayFound || errorOccured) return false;
-return true;
+
+    let bodyToDelete = JSON.stringify(idsToDelete);
+
+    let response;
+    let responseNotOkayFound = false;
+    let errorOccured = false;
+    try {
+        response = await fetch(`${appAddress}/items/Shifts`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: bodyToDelete
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        errorOccured = true;
+        console.error(`${err}`);
+    }
+    if (responseNotOkayFound || errorOccured) return false;
+    return true;
 
 }
 async function deleteShiftManager() {
@@ -320,13 +324,13 @@ async function addManyShiftsManager() {
 }
 async function addManyShiftsToDatabaseManager(shiftStartsEnds) {
     let firstSevenDaysOfChosenMonth = checkWeekdaysForFirstSevenDaysOfChosenMonth();
-    let errorOccured=false;
+    let errorOccured = false;
     for (let i = 0; i < firstSevenDaysOfChosenMonth.length; i++) {
         let dayOfMonth = firstSevenDaysOfChosenMonth[i];
         let shiftStartEndForParticularWeekday = shiftStartsEnds.filter(shift => shift.weekday_number == dayOfMonth.weekday_number);
         if (shiftStartEndForParticularWeekday.length > 0) {
-            let addedCorrectly=await setShiftForChosenWeekdayForNextMonth(dayOfMonth, shiftStartEndForParticularWeekday[0]);
-            if(!addedCorrectly) errorOccured=true;
+            let addedCorrectly = await setShiftForChosenWeekdayForNextMonth(dayOfMonth, shiftStartEndForParticularWeekday[0]);
+            if (!addedCorrectly) errorOccured = true;
         }
         // console.log(shiftStartEndForParticularWeekday);
     }
@@ -375,7 +379,7 @@ async function setShiftForChosenWeekdayForNextMonth(dayOfMonth, shiftData, month
 
     let addedCorrectly = await addManyShiftsToDatabase(allShiftsToAdd);
     return addedCorrectly;
-    
+
     // console.log(allItemsAdded);
     // console.log(allItemsRemoved);
 }
@@ -636,7 +640,7 @@ async function addOneShiftToDatabase(date, startTime, endTime, teacher = localSt
     return true;
 }
 async function getTeachersShiftsForParticularDate(chosenDate, teacher = localStorage.getItem("loggedInUserId")) {
-    let allTeachersShifts = await getAllTeachersShifts(teacher);
+    let allTeachersShifts = await getAllTeachersShiftsOrAppointments("Shifts", teacher);
     let shiftsForChosenDate = allTeachersShifts
         .filter(
             n => n.date == chosenDate
@@ -684,7 +688,7 @@ async function setMainContainerToCalendar(divForTable, divForWeekData, weekStart
     displayUpperInfo(divForWeekData, weekStartEnd);
     setWeekdaysDates(weekStartEnd);
 
-    await displayWeekTimetable(weekStartEnd);
+    await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".teacher-panel-week-day-indicator"), "teacher-panel-timetable-");
 
     let buttonDisplayNextWeek = id("teacher-panel-next-week-button");
     buttonDisplayNextWeek.addEventListener('click', async function (e) {
@@ -696,7 +700,7 @@ async function setMainContainerToCalendar(divForTable, divForWeekData, weekStart
         divForTable.style.visibility = "visible";
         displayUpperInfo(divForWeekData, weekStartEnd, howManyWeeksToAdd);
         setWeekdaysDates(weekStartEnd);
-        await displayWeekTimetable(weekStartEnd);
+        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".teacher-panel-week-day-indicator"), "teacher-panel-timetable-");
     });
 
     let buttonDisplayPreviousWeek = id("teacher-panel-previous-week-button");
@@ -709,7 +713,7 @@ async function setMainContainerToCalendar(divForTable, divForWeekData, weekStart
         divForTable.style.visibility = "visible";
         displayUpperInfo(divForWeekData, weekStartEnd, howManyWeeksToAdd);
         setWeekdaysDates(weekStartEnd);
-        await displayWeekTimetable(weekStartEnd);
+        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".teacher-panel-week-day-indicator"), "teacher-panel-timetable-");
     });
 
 
@@ -772,57 +776,262 @@ function setWeekdaysDates(weekStartEnd) {
 
 
 }
-async function displayWeekTimetable(weekStartEnd, teacherId = localStorage.getItem("loggedInUserId")) {
-    let allTdsInTable = document.querySelectorAll(".teacher-panel-week-day-indicator");
+async function displayWeekTimetable(weekStartEnd, allTdsInTable, cellId,
+    teacherId = localStorage.getItem("loggedInUserId"), displayButtons = false) {
+    console.log(teacherId)
     allTdsInTable.forEach(td => {
         td.style.backgroundColor = "";
         td.textContent = "";
     });
 
 
-    let thisWeekShifts = await getTeacherShiftsForThisWeek(weekStartEnd);
+    let thisWeekShifts = await getTeacherShiftsForThisWeek(weekStartEnd, teacherId);
+    let thisWeekAppointments = await getTeacherAppointmentsForThisWeek(weekStartEnd, teacherId);
     // console.log(thisWeekShifts);
 
     for (let i = 0; i < thisWeekShifts.length; i++) {
         let shiftData = thisWeekShifts[i];
-        displayShiftDataInTable(shiftData);
+        await displayShiftOrAppointmentDataInTable(shiftData, cellId, displayButtons, teacherId, "shift");
+    }
+    for (let i = 0; i < thisWeekAppointments.length; i++) {
+        let appData = thisWeekAppointments[i];
+        await displayShiftOrAppointmentDataInTable(appData, cellId, displayButtons, teacherId, "appointment");
     }
 
+
 }
-function displayShiftDataInTable(shiftDataDict) {
+async function getTeacherAppointmentsForThisWeek(weekStartEnd, teacherId) {
+    let allTeachersApps = await getAllTeachersShiftsOrAppointments("Appointments", teacherId);
+    let appsForThisWeek = allTeachersApps
+        .filter(
+            n => new Date(n.date) >= weekStartEnd["monday_date"]
+                && new Date(n.date) <= weekStartEnd["saturday_date"]
+        );
+    return appsForThisWeek;
+}
+async function displayShiftOrAppointmentDataInTable(dataDict, tdElementToChangeBackgroundColorName, displayButtons, teacherId, whatData) {
+
+    let date;
+    let dayOfWeek;
+    let startHour;
+    let endHour;
+    let appointmentTopic="";
+    let studentInfo="";
+
+    if (whatData == "shift") {
+        date = new Date(dataDict["date"]);
+        dayOfWeek = date.getDay();
+        startHour = dataDict["shift_start"];
+        endHour = dataDict["shift_end"];
+    }
+    else if (whatData == "appointment") {
+        date = new Date(dataDict["date"]);
+        dayOfWeek = date.getDay();
+        startHour = dataDict["app_start"];
+        endHour = dataDict["app_end"];
+        appointmentTopic=dataDict["topic"];
+        studentInfo=await getUserInfo(dataDict["student"]);
+        console.log(studentInfo);
+    }
+    else return;
 
 
-
-    let shiftDate = new Date(shiftDataDict["date"]);
-    let shiftDayOfWeek = shiftDate.getDay();
-    let startHour = shiftDataDict["shift_start"];
-    let endHour = shiftDataDict["shift_end"];
     // console.log(endHour);
 
     // console.log(shiftDate);
     // console.log(shiftDayOfWeek);
 
-    let tdIdWeekDayName = setWeekDayName(shiftDayOfWeek);
+    let tdIdWeekDayName = setWeekDayName(dayOfWeek);
     // console.log(tdIdWeekDayName);
 
     let tdStartCell = setStartCell(startHour);
     // console.log(tdStartCell);
 
     let tdEndCell = setEndCell(endHour);
-    // console.log(tdEndCell);
 
     for (let i = tdStartCell; i <= tdEndCell; i++) {
-        let tdElementToChangeBackgroundColor = id(`teacher-panel-timetable-${tdIdWeekDayName}-${i}`);
+        let tdElementToChangeBackgroundColor = id(`${tdElementToChangeBackgroundColorName}${tdIdWeekDayName}-${i}`);
+
+        if (whatData == "shift") {
+            if (tdElementToChangeBackgroundColor) {
+                tdElementToChangeBackgroundColor.style.backgroundColor = "green";
+                tdElementToChangeBackgroundColor.textContent = "DYŻUR";
+            }
+            if (displayButtons) {
+                let buttonForSettingMeeting = document.createElement('button');
+                buttonForSettingMeeting.setAttribute('id', `${tdElementToChangeBackgroundColorName}${tdIdWeekDayName}-${i}-add-meeting-button`);
+                buttonForSettingMeeting.textContent = 'UMÓW SPOTKANIE';
+                tdElementToChangeBackgroundColor.appendChild(buttonForSettingMeeting);
+
+                buttonForSettingMeeting.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    console.log(i);
+                    console.log(date);
+                    await addMeetingManager(i, date, teacherId);
+                });
+
+
+            }
+        }
+    
+    if (whatData == "appointment") {
         if (tdElementToChangeBackgroundColor) {
-            tdElementToChangeBackgroundColor.style.backgroundColor = "green";
-            tdElementToChangeBackgroundColor.textContent = "DYŻUR";
+            tdElementToChangeBackgroundColor.style.backgroundColor = "red";
+            let info=`SPOTKANIE | ${studentInfo["email"]} | ${appointmentTopic}`;
+            tdElementToChangeBackgroundColor.textContent = info;
+
+        }
+        if (dataDict["student"] == localStorage.getItem("loggedInUserId") || dataDict["teacher"] == localStorage.getItem("loggedInUserId")) {
+            let buttonForDeletingMeeting = document.createElement('button');
+            buttonForDeletingMeeting.setAttribute('id', `${tdElementToChangeBackgroundColorName}${tdIdWeekDayName}-${i}-delete-meeting-button`);
+            buttonForDeletingMeeting.textContent = 'ODWOŁAJ';
+            if (tdElementToChangeBackgroundColor) tdElementToChangeBackgroundColor.appendChild(buttonForDeletingMeeting);
+
+            buttonForDeletingMeeting.addEventListener('click', async function (e) {
+                e.preventDefault();
+                let meetingDeleted = await deleteMeeting(i, date, teacherId);
+                if (meetingDeleted) {alert('Pomyślnie usunięto spotkanie!');
+                localStorage.setItem("setMainContainerToSetMeeting", true);
+                localStorage.setItem("setMainContainerToShiftForm", true);
+                window.location.reload();
+            }
+                else alert('BŁĄD SERWERA. Nie udało się usunąć spotkania');
+            })
         }
     }
 
 
+}
+}
 
+async function deleteMeeting(startHourIndex, meetingDate, teacherId) {
 
+    let startTime = getStartTime(startHourIndex);
+    let endTime = getEndTime(startHourIndex);
+    let date = displayDate(meetingDate, true);
+    let meetingIdToDelete = await getMeetingIdToDelete(startHourIndex, date, teacherId);
 
+    let response;
+    let responseNotOkayFound = false;
+    let errorOccured = false;
+    try {
+        response = await fetch(`${appAddress}/items/Appointments/${meetingIdToDelete}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        errorOccured = true;
+        console.error(`${err}`);
+    }
+    if (responseNotOkayFound || errorOccured) return false;
+    return true;
+
+}
+async function getMeetingIdToDelete(startHourIndex, meetingDateInProperFormat, teacherId) {
+    let startTime = getStartTime(startHourIndex);
+    let allTeachersApps = await getAllTeachersShiftsOrAppointments("Appointments", teacherId);
+    let meetingsToDelete = allTeachersApps
+        .filter(
+            n => n.date == meetingDateInProperFormat
+                && n.app_start == startTime && n.teacher == teacherId
+        );
+    return meetingsToDelete[0].id;
+}
+async function addMeeting(startHourIndex, meetingDate, topic, teacherId, studentId = localStorage.getItem("loggedInUserId")) {
+    let startTime = getStartTime(startHourIndex);
+    let endTime = getEndTime(startHourIndex);
+    let date = displayDate(meetingDate, true);
+
+    let body = {
+        "date": date,
+        "app_start": startTime,
+        "app_end": endTime,
+        "teacher": teacherId,
+        "student": studentId,
+        "topic": topic
+    }
+    let bodyToPost = JSON.stringify(body);
+
+    let response;
+    let responseNotOkayFound = false;
+    let errorOccured = false;
+    try {
+        response = await fetch(`${appAddress}/items/Appointments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: bodyToPost
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        errorOccured = true;
+        console.error(`${err}`);
+    }
+    if (responseNotOkayFound || errorOccured) return false;
+    return true;
+
+}
+function getStartTime(startHourIndex) {
+    let startTime = 0;
+    switch (startHourIndex) {
+        case 1:
+            startTime = "08:00:00";
+            break;
+        case 2:
+            startTime = "09:45:00";
+            break;
+        case 3:
+            startTime = "11:30:00";
+            break;
+        case 4:
+            startTime = "13:15:00";
+            break;
+        case 5:
+            startTime = "15:00:00";
+            break;
+        case 6:
+            startTime = "16:45:00";
+            break;
+        case 7:
+            startTime = "18:30:00";
+            break;
+    }
+    return startTime;
+}
+function getEndTime(startHourIndex) {
+    let endTime = 0;
+    switch (startHourIndex) {
+        case 1:
+            endTime = "09:30:00";
+            break;
+        case 2:
+            endTime = "11:15:00";
+            break;
+        case 3:
+            endTime = "13:00:00";
+            break;
+        case 4:
+            endTime = "14:45:00";
+            break;
+        case 5:
+            endTime = "16:30:00";
+            break;
+        case 6:
+            endTime = "18:15:00";
+            break;
+        case 7:
+            endTime = "20:00:00";
+            break;
+    }
+    return endTime;
 }
 function setStartCell(startHour) {
     let tdItemNumber = 0;
@@ -908,8 +1117,8 @@ function setWeekDayName(shiftDayOfWeek) {
     return tdIdWeekDayName;
 }
 
-async function getTeacherShiftsForThisWeek(weekStartEnd) {
-    let allTeachersShifts = await getAllTeachersShifts();
+async function getTeacherShiftsForThisWeek(weekStartEnd, teacherId = localStorage.getItem("loggedInUserId")) {
+    let allTeachersShifts = await getAllTeachersShiftsOrAppointments("Shifts", teacherId);
     let shiftsForThisWeek = allTeachersShifts
         .filter(
             n => new Date(n.date) >= weekStartEnd["monday_date"]
@@ -919,12 +1128,12 @@ async function getTeacherShiftsForThisWeek(weekStartEnd) {
     // console.log(allTeachersShifts);
     // console.log(shiftsForThisWeek);
 }
-async function getAllTeachersShifts(teacherId = localStorage.getItem("loggedInUserId")) {
+async function getAllTeachersShiftsOrAppointments(whatToGet, teacherId = localStorage.getItem("loggedInUserId")) {
     let response;
     let responseNotOkayFound = false;
     let errorOccured = false;
     try {
-        response = await fetch(`${appAddress}/items/Shifts`, {
+        response = await fetch(`${appAddress}/items/${whatToGet}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -1029,28 +1238,7 @@ function checkIfUserIsTeacher() {
     if (localStorage.getItem("loggedInRole") == teacherRoleId) return true;
     return false;
 }
-async function getUserInfo(userId) {
-    let response;
-    let errorOccured = false;
-    let responseNotOkayFound = false;
-    try {
-
-        response = await fetch(`${appAddress}/users/${userId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            }
-        });
-        if (!response.ok) responseNotOkayFound = true;
-
-    }
-    catch (err) {
-        console.error(`${err}`);
-        errorOccured = true;
-    }
-    if (errorOccured || responseNotOkayFound) return null;
-    let responseJson = await response.json();
-    let responseData = responseJson.data;
-    return responseData;
+export {
+    displayUpperInfo, displayWeekTimetable, setMondayAndSaturdayForThisWeek, displayDate, setWeekdaysDates,
+    addMeeting, getStartTime, getEndTime
 }
