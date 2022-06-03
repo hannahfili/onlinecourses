@@ -46,18 +46,17 @@
         <button id="teacher-panel-previous-week-button"></button> */
 
 #teacher-panel-next-week-button {
-    /* background: url('https://3qyn4234.directus.app/assets/eb022782-c955-4598-ab4c-2152c5b96af0?key=actual-size') no-repeat top left;  */
-    /* background-repeat: no-repeat;
-    background-size: auto;
-    background-color: yellow; */
+    
     height: 100px;
     width: 100px;
 }
 #student-panel-next-week-button {
-    /* background: url('https://3qyn4234.directus.app/assets/eb022782-c955-4598-ab4c-2152c5b96af0?key=actual-size') no-repeat top left;  */
-    /* background-repeat: no-repeat;
-    background-size: auto;
-    background-color: yellow; */
+    
+    height: 100px;
+    width: 100px;
+}
+#admin-panel-next-week-button {
+    
     height: 100px;
     width: 100px;
 }
@@ -67,6 +66,10 @@
     width: 100px;
 }
 #student-panel-previous-week-button {
+    height: 100px;
+    width: 100px;
+}
+#admin-panel-previous-week-button{
     height: 100px;
     width: 100px;
 }

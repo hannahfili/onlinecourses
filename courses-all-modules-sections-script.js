@@ -243,7 +243,30 @@ async function displayOneModule(moduleDict, allModulesContainer, newOrderNumbers
         localStorage.setItem("moduleIdToAddSectionTo", moduleDict["id"]);
         window.location = "add-section.html";
     });
+
     mainContainerForModule.appendChild(buttonToAddSectionToModule);
+
+    let buttonToDeleteModule = document.createElement('button');
+    buttonToDeleteModule.setAttribute('id', `course-all-modules-sections-button-to-delete-module-${moduleDict["id"]}`);
+    buttonToDeleteModule.setAttribute('class', 'course-all-modules-sections-button-to-delete-modules btn btn-danger')
+    buttonToDeleteModule.textContent = "X Usuń moduł";
+    buttonToDeleteModule.addEventListener('click', async function (e) {
+        e.preventDefault();
+        let confirmed=confirm('Czy na pewno chcesz usunąć ten moduł?');
+        if(confirmed){
+            let deleted=await deleteModule(moduleDict.id);
+            if(deleted){
+                alert('Pomyślnie usunięto moduł');
+                window.location.reload();
+            }
+            else{
+                alert('BŁĄD SERWERA! Nie udało się usunąć modułu');
+            }
+        }
+        
+    });
+
+    mainContainerForModule.appendChild(buttonToDeleteModule);
 
 
 
@@ -271,6 +294,27 @@ async function displayOneModule(moduleDict, allModulesContainer, newOrderNumbers
     allModulesContainer.appendChild(mainContainerForModule);
 
 
+}
+async function deleteModule(moduleId){
+    let response;
+    let responseNotOkayFound = false;
+    let errorOccured = false;
+    try {
+        response = await fetch(`${appAddress}/items/Modules/${moduleId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            }
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    if (responseNotOkayFound || errorOccured) return false;
+    return true;
 }
 async function displayModuleSections(moduleId, mainContainerForModule) {
     let errorContainerForDisplayingSections = document.createElement("div");

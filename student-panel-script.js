@@ -10,8 +10,16 @@ import {
 } from './general-script.js';
 import {
     displayUpperInfo, displayWeekTimetable, setMondayAndSaturdayForThisWeek, displayDate, addMeeting,
-    getStartTime, getEndTime
+    getStartTime, getEndTime, setMainContainerToShiftForm
 } from './teacher-panel-script.js';
+import{
+    enableDisableButtonVersion2, deleteManyItemsManager
+}
+from './admin-panel-script.js';
+// import{
+//     validateAdditionOrEditionData, makeDictionaryOfInputData
+// }
+// from './add-edit-user-script.js';
 
 
 let leftArrowClicked = 0;
@@ -25,12 +33,12 @@ window.onload = (async function () {
     let nameTextNode = document.createTextNode(`${userInfo["email"]}`);
     pageName.appendChild(nameTextNode);
 
-    let profileAccessTimeout=id("student-panel-page-access-timeout");
-    let timeLeft = new Date(userInfo.platform_access_timeout).getTime()-new Date().getTime();
+    let profileAccessTimeout = id("student-panel-page-access-timeout");
+    let timeLeft = new Date(userInfo.platform_access_timeout).getTime() - new Date().getTime();
     let timeLeftInDays = timeLeft / (1000 * 3600 * 24);
 
 
-    let accessTimeoutTextNode=document.createTextNode("Masz "+parseInt(timeLeftInDays)+" dni dostępu do platformy");
+    let accessTimeoutTextNode = document.createTextNode("Masz " + parseInt(timeLeftInDays) + " dni dostępu do platformy");
     profileAccessTimeout.appendChild(accessTimeoutTextNode);
 
     let divForSettingMeetings = id("student-panel-set-meetings-div");
@@ -38,6 +46,8 @@ window.onload = (async function () {
     let divForWeekData = id("student-panel-week-name");
     let divForSelectTeacher = id("student-panel-select-teacher-div");
     let selectTeacherElement = id("student-panel-select-teacher-to-meet");
+    let divForDeposits=id("student-panel-my-deposits");
+    let divForMyData=id('student-panel-my-account-data-div');
     // let divForShiftForm = id("teacher-panel-shift-form");
 
 
@@ -47,13 +57,24 @@ window.onload = (async function () {
     if (localStorage.getItem("setMainContainerToSetMeeting") == "true") {
         // divForTable.remove();
         // divForTable.style.visibility="visible";
+        divForDeposits.remove();
+        divForMyData.remove()
         localStorage.setItem("setMainContainerToSetMeeting", false);
-        await chooseTeacherAndSetMeeting(divForTimetable, divForWeekData, weekStartEnd, divForSelectTeacher, selectTeacherElement);
+        await chooseTeacherAndSetMeeting(divForTimetable, divForWeekData, weekStartEnd, divForSelectTeacher, selectTeacherElement, "student-panel");
     }
     else if (localStorage.getItem("setMainContainerToDeposits") == "true") {
         divForSettingMeetings.remove();
+        divForMyData.remove()
         localStorage.setItem("setMainContainerToDeposits", false);
         await setMainContainerToDeposits("student-panel");
+    }
+    else if (localStorage.getItem("setMainContainerToMyData") == "true") {
+        divForSettingMeetings.remove();
+        divForDeposits.remove();
+        
+
+        localStorage.setItem("setMainContainerToMyData", false);
+        await setMainContainerToMyData("student-panel");
     }
 
 
@@ -77,94 +98,277 @@ window.onload = (async function () {
         localStorage.setItem("setMainContainerToDeposits", true);
         window.location.reload();
     });
-    let buttonToLogOut=id("student-panel-log-out");
+
+    let buttonMyData = id("student-panel-my-account-data");
+    buttonMyData.addEventListener('click', async function (e) {
+        e.preventDefault();
+        localStorage.setItem("setMainContainerToMyData", true);
+        window.location.reload();
+    });
+
+    let buttonToLogOut = id("student-panel-log-out");
     buttonToLogOut.addEventListener('click', async function (e) {
         e.preventDefault();
         await logOut();
-        window.location="index.html";
+        window.location = "index.html";
     });
 
 });
+async function setMainContainerToMyData(filePrefix){
+    // student-panel-my-account-data-div
+    // student-panel-my-account-data-div
+    let divForMyData=id(`${filePrefix}-my-account-data-div`);
+    divForMyData.style.visibility="visible";
+    await setEditUserDefaultFields(localStorage.getItem("loggedInUserId"), filePrefix);
+
+    // student-panel-my-account-submit
+    let buttonToEditPersonalData = id(`${filePrefix}-my-account-submit`);
+    buttonToEditPersonalData.addEventListener('click', async function (e) {
+        e.preventDefault();
+        await editMyData(filePrefix);
+        localStorage.setItem("setMainContainerToMyData", true);
+        window.location.reload();
+
+    });
+}
+async function editMyData(filePrefix){
+    let emailElement=id(`${filePrefix}-my-account-email`);
+    let passwordElementOne=id(`${filePrefix}-my-account-password`);
+    let passwordElementTwo = id(`${filePrefix}-my-account-password-2`);
+    let passwordOneErrorContainer=id(`${filePrefix}-my-account-password-error`);
+    let passwordTwoErrorContainer=id(`${filePrefix}-my-account-password2-error`);
+    let emailErrorContainer=id(`${filePrefix}-my-account-email-error`);
+
+    let firstNameElement=id(`${filePrefix}-my-account-first-name`);
+    let lastNameElement=id(`${filePrefix}-my-account-last-name`);
+
+    let validated = validateAdditionOrEditionData(emailElement.value, passwordElementOne.value, passwordElementTwo.value,
+        passwordOneErrorContainer, passwordTwoErrorContainer, emailErrorContainer);
+    // console.log(validated);
+    console.log(filePrefix)
+    console.log(emailElement.value);
+    console.log(passwordElementOne.value);
+    console.log(passwordElementTwo.value);
+    let errorContainer = id(`${filePrefix}-my-account-all-error`);
+
+    if (validated) {
+        const valuesToUpdate = makeDictionaryOfInputData(emailElement.value,
+            passwordElementOne.value, firstNameElement.value, lastNameElement.value);
+       console.log(valuesToUpdate);
+        for (let key in valuesToUpdate) {
+            if(valuesToUpdate[key] != "") await updateUserData(localStorage.getItem("loggedInUserId"), key, valuesToUpdate[key]);
+        }
+    }
+    else {
+        errorContainer.textContent = `Wprowadzono niepoprawne dane. Spróbuj jeszcze raz`;
+    }
+}
+function makeDictionaryOfInputData(email, passwordOne, firstName, lastName) {
+    const data = {
+        "email": email,
+        "password": passwordOne,
+        "first_name": firstName,
+        "last_name": lastName
+    };
+    return data;
+
+}
+function validateAdditionOrEditionData(email, passwordOne, passwordTwo,
+    passwordOneErrorContainer, passwordTwoErrorContainer, emailErrorContainer) {
+
+    if (email != "") {
+        if (!validateEmail(email, emailErrorContainer)) return false;
+    }
+    if (passwordOne != "" && passwordTwo != "") {
+        if (!validatePassword(passwordOne, passwordOneErrorContainer)) return false;
+        if (!validatePassword(passwordTwo, passwordTwoErrorContainer)) return false;
+        if (passwordOne != passwordTwo) {
+            passwordTwoErrorContainer.textContent = "Hasła muszą być takie same";
+            return false;
+        }
+    }
+    return true;
+
+}
+async function setEditUserDefaultFields(userId, filePrefix) {
+
+    let userInfo=await getUserInfo(userId);
+    let firstName = userInfo.first_name;
+    let lastName = userInfo.last_name;
+    let email = userInfo.email;
+    // student-panel-my-account-email
+
+    let firstNameElement = nameGetter(`${filePrefix}-my-account-first-name`);
+    let lastNameElement = nameGetter(`${filePrefix}-my-account-last-name`);
+    let emailElement = nameGetter(`${filePrefix}-my-account-email`);
+
+
+    firstName != "null" ? firstNameElement[0].placeholder = firstName : firstNameElement[0].placeholder = "";
+    lastName != "null" ? lastNameElement[0].placeholder = lastName : lastNameElement[0].placeholder = "";
+    email != "null" ? emailElement[0].placeholder = email : emailElement[0].placeholder = "";
+
+}
 async function setMainContainerToDeposits(filePrefix, userId = localStorage.getItem("loggedInUserId")) {
+    let buttonToDeleteManyDeposits;
+    let checkboxesElements;
+    let numberOfBoxesChecked = 0;
+    let userIsAdmin = localStorage.getItem("loggedInRole") == adminRoleId ? true : false;
+    let userIsTeacher = localStorage.getItem("loggedInRole") == teacherRoleId ? true : false;
+    let userIsStudent = localStorage.getItem("loggedInRole") == studentRoleId ? true : false;
+
     let myDepositsMainDiv = id(`${filePrefix}-my-deposits`);
+    console.log(myDepositsMainDiv);
     myDepositsMainDiv.style.visibility = "visible";
 
-    let myDepositsTBody=id("student-panel-my-deposits-table-all-transfers");
+    let myDepositsTBody = id(`${filePrefix}-my-deposits-table-all-transfers`);
+    if(userIsStudent) await displayUserDepositsUpperPanel(userId, filePrefix);
 
-    await displayUserDepositsUpperPanel(userId, filePrefix);
+    if (userIsTeacher) await displayUserDepositsUpperPanel(userId, filePrefix, true);
     console.log('HEELOOOO');
 
-    let thisUserBankTransfers=await getUserBankTransfertFromDatabase(userId);
-    thisUserBankTransfers.sort(function(a,b){
-        const date1 = new Date(a.transfer_datetime);
-        const date2 = new Date(b.transfer_datetime);
-    
-    return date1 - date2;
-    });
-    console.log(thisUserBankTransfers);
+    let bankTransfers;
+    if (userIsAdmin) {
+        bankTransfers = await getBankTransfersFromDatabase(null);
 
-    for(let i=0; i<thisUserBankTransfers.length; i++){
+        buttonToDeleteManyDeposits=document.createElement('button');
+        buttonToDeleteManyDeposits.setAttribute('id', 'admin-panel-button-to-delete-many-deposits');
+        buttonToDeleteManyDeposits.setAttribute('class', 'btn btn-danger');
+        buttonToDeleteManyDeposits.textContent="Usuń wybrane przelewy";
+        buttonToDeleteManyDeposits.disabled=true;
 
-        let transfer=thisUserBankTransfers[i];
-        let receiverInfo=await getUserInfo(transfer.receiver);
-        let receiverEmail=receiverInfo.email;
+        checkboxesElements={};
 
-        let senderInfo=await getUserInfo(transfer.sender);
-        let senderEmail=senderInfo.email;
-
-        let datetime=transfer.transfer_datetime;
-        let datetimeToDisplay=displayDateTime(datetime);
-
-        let title=transfer.transfer_title;
-
-
-
-        let tr=document.createElement('tr');
-        tr.setAttribute('id', `${filePrefix}-tr-${i}`);
-
-        let tdForDateTime=document.createElement('td');
-        tdForDateTime.setAttribute('id', `${filePrefix}-td-datetime-${i}`);
-        tdForDateTime.textContent=datetimeToDisplay;
-        tr.appendChild(tdForDateTime);
-
-        let tdForTitle=document.createElement('td');
-        tdForTitle.setAttribute('id', `${filePrefix}-td-title-${i}`);
-        tdForTitle.textContent=title;
-        tr.appendChild(tdForTitle);
-
-        let tdForSender=document.createElement('td');
-        tdForSender.setAttribute('id', `${filePrefix}-td-sender-${i}`);
-        
-        let tdForReceiver=document.createElement('td');
-        tdForReceiver.setAttribute('id', `${filePrefix}-td-receiver-${i}`);
-        
-        if(senderEmail!=receiverEmail){
-         if(senderInfo.id==userId){
-             tdForSender.textContent='';
-             tdForReceiver.textContent=receiverEmail;
-             tr.style.backgroundColor = "red";
-
-         }
-         else if(receiverInfo.id==userId){
-             tdForSender.textContent=senderEmail;
-             tdForReceiver.textContent='';
-         }   
+        let checkboxToCheckAllShifts=id(`admin-panel-my-deposits-table-receiver-checkbox-input`);
+    checkboxToCheckAllShifts.addEventListener('click', function(){
+        let allCheckBoxesElements=document.querySelectorAll('.deposit-details-form-check-input');
+        if(numberOfBoxesChecked==0){
+            
+            allCheckBoxesElements.forEach(function(element){
+                element.checked=true;
+                numberOfBoxesChecked++;
+            });
+            
         }
         else{
-            tdForSender.textContent=senderEmail;
-            tdForReceiver.textContent='';
-            tr.style.backgroundColor = "green";
+            allCheckBoxesElements.forEach(function(element){
+                element.checked=false;
+                if(numberOfBoxesChecked>0) numberOfBoxesChecked--;
+            });
         }
+        if(numberOfBoxesChecked>0) buttonToDeleteManyDeposits.disabled=false;
+        else buttonToDeleteManyDeposits.disabled=true;          
+            
+    
+        })
+    }
+    else {
+        bankTransfers = await getBankTransfersFromDatabase(userId);
+    }
+
+
+    bankTransfers.sort(function (a, b) {
+        const date1 = new Date(a.transfer_datetime);
+        const date2 = new Date(b.transfer_datetime);
+
+        return date1 - date2;
+    });
+    console.log(bankTransfers);
+
+    for (let i = 0; i < bankTransfers.length; i++) {
+
+        let transfer = bankTransfers[i];
+        let receiverInfo = await getUserInfo(transfer.receiver);
+        let receiverEmail = receiverInfo.email;
+
+        let senderInfo = await getUserInfo(transfer.sender);
+        let senderEmail = senderInfo.email;
+
+        let datetime = transfer.transfer_datetime;
+        let datetimeToDisplay = displayDateTime(datetime);
+
+        let title = transfer.transfer_title;
+
+
+
+        let tr = document.createElement('tr');
+        tr.setAttribute('id', `${filePrefix}-tr-${i}`);
+
+        let tdForDateTime = document.createElement('td');
+        tdForDateTime.setAttribute('id', `${filePrefix}-td-datetime-${i}`);
+        tdForDateTime.textContent = datetimeToDisplay;
+        tr.appendChild(tdForDateTime);
+
+        let tdForTitle = document.createElement('td');
+        tdForTitle.setAttribute('id', `${filePrefix}-td-title-${i}`);
+        tdForTitle.textContent = title;
+        tr.appendChild(tdForTitle);
+
+        let tdForSender = document.createElement('td');
+        tdForSender.setAttribute('id', `${filePrefix}-td-sender-${i}`);
+
+        let tdForReceiver = document.createElement('td');
+        tdForReceiver.setAttribute('id', `${filePrefix}-td-receiver-${i}`);
+
+        if (!userIsAdmin) {
+            if (senderEmail != receiverEmail) {
+                if (senderInfo.id == userId) {
+                    tdForSender.textContent = '';
+                    tdForReceiver.textContent = receiverEmail;
+                    tr.style.backgroundColor = "red";
+
+                }
+                else if (receiverInfo.id == userId) {
+                    tdForSender.textContent = senderEmail;
+                    tdForReceiver.textContent = '';
+                    tr.style.backgroundColor = "green";
+                }
+            }
+            else {
+                tdForSender.textContent = senderEmail;
+                tdForReceiver.textContent = '';
+                tr.style.backgroundColor = "green";
+            }
+        }
+        else {
+            tdForSender.textContent = senderEmail;
+            tdForReceiver.textContent = receiverEmail;
+        }
+
+
 
         tr.appendChild(tdForSender);
         tr.appendChild(tdForReceiver);
 
-        let tdForSum=document.createElement('td');
+        let tdForSum = document.createElement('td');
         tdForSum.setAttribute('id', `${filePrefix}-td-sum-${i}`);
+        if (!userIsAdmin) {
+            if (receiverInfo.id == userId) tdForSum.textContent = transfer.value;
+            else tdForSum.textContent = "-" + transfer.value;
+        }
+        else {
+            tdForSum.textContent = transfer.value
+        }
 
-        if(receiverInfo.id==userId) tdForSum.textContent=transfer.value;
-        else tdForSum.textContent="-"+transfer.value;
+
         tr.appendChild(tdForSum);
+
+        if (userIsAdmin) {
+            let checkboxBox = document.createElement('td');
+            checkboxBox.setAttribute('id', `deposit-details-checkbox-td-meeting-${i}`);
+
+            let checkbox = document.createElement('input');
+            checkbox.setAttribute('id', `deposit-details-checkbox-${transfer.id}`);
+            checkbox.setAttribute('class', `deposit-details-form-check-input`);
+            checkbox.setAttribute('type', 'checkbox');
+            checkbox.addEventListener('click', function () {
+                if (numberOfBoxesChecked > 0) buttonToDeleteManyDeposits.disabled = false;
+                numberOfBoxesChecked = enableDisableButtonVersion2(this, buttonToDeleteManyDeposits, numberOfBoxesChecked)
+            });
+            checkboxesElements[`${transfer.id}`] = checkbox;
+            checkboxBox.appendChild(checkbox);
+
+            tr.appendChild(checkboxBox);
+        }
 
 
         myDepositsTBody.appendChild(tr);
@@ -172,12 +376,26 @@ async function setMainContainerToDeposits(filePrefix, userId = localStorage.getI
 
 
     }
-
+    if(userIsAdmin) {
+        myDepositsTBody.after(buttonToDeleteManyDeposits);
+        buttonToDeleteManyDeposits.addEventListener('click', async function (e) {
+            e.preventDefault();
+            let deleted = await deleteManyItemsManager(checkboxesElements, "Bank_transfers");
+            if(deleted){
+                alert('Pomyślnie usunięto wybrane transakcje');
+                localStorage.setItem("setMainContainerToDeposits", true);
+                window.location.reload();
+            }
+            else{
+                alert('BŁĄD SERWERA. Nie udało się usunąć wybranych transakcji')
+            }
+        })
+    }
 
 
 
 }
-async function getUserBankTransfertFromDatabase(userId){
+async function getBankTransfersFromDatabase(userId) {
     let response;
     let responseNotOkayFound = false;
     let errorOccured = false;
@@ -199,18 +417,22 @@ async function getUserBankTransfertFromDatabase(userId){
     let responseJson = await response.json();
     let responseData = responseJson.data;
     // console.log(responseData);
-    let thisUserBankTransfers = responseData.filter(n => n.sender == userId || n.receiver==userId);
-    return thisUserBankTransfers;
+    if (userId != null) {
+        let thisUserBankTransfers = responseData.filter(n => n.sender == userId || n.receiver == userId);
+        return thisUserBankTransfers;
+    }
+    return responseData;
+
 }
-async function displayUserDepositsUpperPanel(studentId, filePrefix) {
-    let userInfo = await getUserInfo(studentId);
+async function displayUserDepositsUpperPanel(userId, filePrefix, withoutAccessTimeout=false) {
+    let userInfo = await getUserInfo(userId);
     let balance = userInfo.balance;
     let platform_access_timeout = userInfo.platform_access_timeout;
     let timeoutDisplay = displayDateTime(platform_access_timeout);
 
     let balancePlace = id(`${filePrefix}-my-deposits-my-balance`);
     balancePlace.textContent = `Bieżące saldo: ${balance == null ? 0 : balance} PLN`;
-
+    if(withoutAccessTimeout) return;
     let platform_access_timeout_Place = id(`${filePrefix}-my-deposits-platform-access-timeout`);
     platform_access_timeout_Place.textContent = "Data ważności konta: " + timeoutDisplay;
 
@@ -219,12 +441,12 @@ async function displayUserDepositsUpperPanel(studentId, filePrefix) {
 
     buttonToProlongPlaftormAccess.addEventListener('click', async function (e) {
         e.preventDefault();
-        let prolonged = await prolongAccess(studentId);
+        let prolonged = await prolongAccess(userId);
     });
     buttonToTopUpAccount.addEventListener('click', async function (e) {
         e.preventDefault();
         platform_access_timeout_Place.remove()
-        let toppedUp = await topUpAccountManager(studentId, buttonToTopUpAccount, filePrefix);
+        let toppedUp = await topUpAccountManager(userId, buttonToTopUpAccount, filePrefix);
     });
 
 }
@@ -233,7 +455,7 @@ async function topUpAccountManager(userId, button, filePrefix) {
     let userInfo = await getUserInfo(userId);
     let userBalance = userInfo.balance;
     if (userBalance == null) userBalance = 0;
-    userBalance=Number(userBalance);
+    userBalance = Number(userBalance);
     console.log(userBalance);
 
     let divForChoosingAmountOfMoney = document.createElement('div');
@@ -296,10 +518,10 @@ async function topUpAccountManager(userId, button, filePrefix) {
 
 
     let submitButton = document.createElement('button');
-    submitButton.setAttribute('id',`${filePrefix}-top-up-account-submit-button`);
-    submitButton.textContent='Zatwierdź';
+    submitButton.setAttribute('id', `${filePrefix}-top-up-account-submit-button`);
+    submitButton.textContent = 'Zatwierdź';
     divForChoosingAmountOfMoney.appendChild(submitButton);
-    
+
     button.after(divForChoosingAmountOfMoney);
     submitButton.addEventListener('click', async function (e) {
         e.preventDefault();
@@ -307,7 +529,7 @@ async function topUpAccountManager(userId, button, filePrefix) {
         if (value != null) {
             let transferMade = await makeTransferManager(userId, value, "Doładowanie konta", displayDate(new Date(), true, true), userId);
             if (transferMade) {
-                let updated = await updateUserData(userId, "balance", Number(userBalance+Number(value)), "doładowanie konta");
+                let updated = await updateUserData(userId, "balance", Number(userBalance + Number(value)), "doładowanie konta");
                 if (updated) {
                     alert('Pomyślnie doładowano konto');
 
@@ -317,11 +539,11 @@ async function topUpAccountManager(userId, button, filePrefix) {
 
             }
         }
-        else{
-            let errorContainer=document.createElement('div');
+        else {
+            let errorContainer = document.createElement('div');
             errorContainer.setAttribute('id', `${filePrefix}-top-up-account-error-place`);
             errorContainer.setAttribute('class', `error`);
-            errorContainer.textContent='Zaznacz wartość!';
+            errorContainer.textContent = 'Zaznacz wartość!';
             divForChoosingAmountOfMoney.appendChild(errorContainer);
         }
     });
@@ -411,15 +633,18 @@ async function setMeetingWithTeacherAddTeachersSelectOptions(containerForSelect,
 
 
 }
-async function chooseTeacherAndSetMeeting(divForTable, divForWeekData, weekStartEnd, divForSelectTeacher, selectTeacherElement) {
-    let errorContainer = id("student-panel-select-teacher-to-meet-error");
+async function chooseTeacherAndSetMeeting(divForTable, divForWeekData, weekStartEnd, divForSelectTeacher, selectTeacherElement, filePrefix) {
+    let divForShiftForm = "";
+    if (filePrefix == "admin-panel") divForShiftForm = id(`${filePrefix}-shift-form`);
+    let errorContainer = id(`${filePrefix}-select-teacher-to-meet-error`);
     divForSelectTeacher.style.visibility = "visible";
     await setMeetingWithTeacherAddTeachersSelectOptions(selectTeacherElement);
-    let submitButton = id("student-panel-select-teacher-to-meet-submit-button");
+    let submitButton = id(`${filePrefix}-select-teacher-to-meet-submit-button`);
     submitButton.addEventListener('click', async function (e) {
         e.preventDefault();
         if (selectTeacherElement.value != "none") {
-            showTeachersCalendar(divForTable, divForWeekData, weekStartEnd, selectTeacherElement.value);
+            await showTeachersCalendar(divForTable, divForWeekData, weekStartEnd, selectTeacherElement.value, filePrefix);
+            if (filePrefix == "admin-panel") await setMainContainerToShiftForm(divForShiftForm, weekStartEnd, filePrefix, selectTeacherElement.value);
             errorContainer.textContent = '';
         }
         else errorContainer.textContent = "Musisz wybrać nauczyciela, aby sprawdzić grafik";
@@ -428,21 +653,26 @@ async function chooseTeacherAndSetMeeting(divForTable, divForWeekData, weekStart
     //    await 
 
 }
-async function showTeachersCalendar(divForTable, divForWeekData, weekStartEnd, teacherId) {
+async function showTeachersCalendar(divForTable, divForWeekData, weekStartEnd, teacherId, filePrefix) {
+    rightArrowClicked = 0;
+    leftArrowClicked = 0;
     console.log("RIGHT: ", rightArrowClicked);
     console.log("LEFT: ", leftArrowClicked);
 
     divForTable.style.visibility = "visible";
     displayUpperInfo(divForWeekData, weekStartEnd);
-    setWeekdaysDates(weekStartEnd);
+    setWeekdaysDates(weekStartEnd, filePrefix);
     console.log(teacherId);
 
-    let buttonsIds = id("student-panel-shift-choice-button-");
+    let buttonsIds = id(`${filePrefix}-shift-choice-button-`);
 
-    await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".student-panel-week-day-indicator"),
-        "student-panel-timetable-", teacherId, true);
+    let displayButtons = false;
+    if (filePrefix == "student-panel") displayButtons = true;
 
-    let buttonDisplayNextWeek = id("student-panel-next-week-button");
+    await displayWeekTimetable(weekStartEnd, document.querySelectorAll(`.${filePrefix}-week-day-indicator`),
+        `${filePrefix}-timetable-`, teacherId, displayButtons);
+
+    let buttonDisplayNextWeek = id(`${filePrefix}-next-week-button`);
     buttonDisplayNextWeek.addEventListener('click', async function (e) {
         console.log("RIGHT: ", rightArrowClicked);
         console.log("LEFT: ", leftArrowClicked);
@@ -453,12 +683,12 @@ async function showTeachersCalendar(divForTable, divForWeekData, weekStartEnd, t
         let weekStartEnd = setMondayAndSaturdayForThisWeek(howManyWeeksToAdd);
         divForTable.style.visibility = "visible";
         displayUpperInfo(divForWeekData, weekStartEnd, howManyWeeksToAdd);
-        setWeekdaysDates(weekStartEnd);
-        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".student-panel-week-day-indicator"), "student-panel-timetable-", teacherId, true);
+        setWeekdaysDates(weekStartEnd, filePrefix);
+        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(`.${filePrefix}-week-day-indicator`), `${filePrefix}-timetable-`, teacherId, displayButtons);
 
     });
 
-    let buttonDisplayPreviousWeek = id("student-panel-previous-week-button");
+    let buttonDisplayPreviousWeek = id(`${filePrefix}-previous-week-button`);
     buttonDisplayPreviousWeek.addEventListener('click', async function (e) {
         console.log("RIGHT: ", rightArrowClicked);
         console.log("LEFT: ", leftArrowClicked);
@@ -469,17 +699,17 @@ async function showTeachersCalendar(divForTable, divForWeekData, weekStartEnd, t
         let weekStartEnd = setMondayAndSaturdayForThisWeek(howManyWeeksToAdd);
         divForTable.style.visibility = "visible";
         displayUpperInfo(divForWeekData, weekStartEnd, howManyWeeksToAdd);
-        setWeekdaysDates(weekStartEnd);
-        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".student-panel-week-day-indicator"), "student-panel-timetable-", teacherId, true);
+        setWeekdaysDates(weekStartEnd, filePrefix);
+        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(`.${filePrefix}-week-day-indicator`), `${filePrefix}-timetable-`, teacherId, displayButtons);
 
     });
 
 
 
 }
-function setWeekdaysDates(weekStartEnd) {
+function setWeekdaysDates(weekStartEnd, filePrefix) {
 
-    let weekdays = document.querySelectorAll(".student-panel-week-day");
+    let weekdays = document.querySelectorAll(`.${filePrefix}-week-day`);
     // console.log(weekdays);
     let startMonday = weekStartEnd["monday_date"];
     // let weekdaysArray=[...]
@@ -490,10 +720,10 @@ function setWeekdaysDates(weekStartEnd) {
 
 
         let newDateDiv = document.createElement("div");
-        newDateDiv.setAttribute("id", `student-panel-text-node-with-date-${i}`);
+        newDateDiv.setAttribute("id", `${filePrefix}-text-node-with-date-${i}`);
         newDateDiv.textContent = dateToDisplayAsString;
 
-        let oldDateDiv = id(`student-panel-text-node-with-date-${i}`);
+        let oldDateDiv = id(`${filePrefix}-text-node-with-date-${i}`);
         if (oldDateDiv) oldDateDiv.remove();
 
         weekdays[i].appendChild(newDateDiv);
@@ -581,7 +811,7 @@ async function addMeetingManager(startHourIndex, dateNotParsed, teacherId) {
             if (confirmed) {
                 transferMade = await makeTransferManager(teacherId, 50.0, topicInput.value, displayDate(dateNotParsed, true, true));
                 if (transferMade) {
-                    meetingAdded = await addMeeting(startHourIndex, dateNotParsed, topicInput.value, teacherId);
+                    meetingAdded = await addMeeting(startHourIndex, dateNotParsed, topicInput.value, teacherId, localStorage.getItem("loggedInUserId"));
                     if (meetingAdded) {
                         alert(`Pomyślnie dodano spotkanie! Szczegóły: data: ${displayDate(dateNotParsed)}, godzina: ${getStartTime(startHourIndex)}, temat: ${topicInput.value}`);
 
@@ -609,12 +839,12 @@ async function makeTransferManager(receiver, amountOfMoney, title, dateTime, sen
     let senderInfo = await getUserInfo(sender);
     let senderBalance = senderInfo.balance;
     if (senderBalance == null) senderBalance = 0;
-    senderBalance=Number(senderBalance);
+    senderBalance = Number(senderBalance);
 
     let receiverInfo = await getUserInfo(receiver);
     let receiverBalance = receiverInfo.balance;
     if (receiverBalance == null) receiverBalance = 0;
-    receiverBalance=Number(receiverBalance);
+    receiverBalance = Number(receiverBalance);
 
     let makeTransferPossible = false;
     let accountUpdated = false;
@@ -685,5 +915,6 @@ async function makeTransfer(receiver, amountOfMoney, title, dateTime, sender) {
     return true;
 }
 export {
-    showTeachersCalendar, addMeetingManager
+    showTeachersCalendar, addMeetingManager, chooseTeacherAndSetMeeting, setMainContainerToDeposits,
+    setMainContainerToMyData
 }

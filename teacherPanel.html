@@ -29,6 +29,12 @@
                         dyżurów</button>
                 </li>
                 <li class="nav-item active">
+                    <button class="btn btn-outline-success" id="teacher-panel-my-deposits-button">Wpłaty</button>
+                </li>
+                <li class="nav-item active">
+                    <button class="btn btn-outline-success" id="teacher-panel-my-account-data">Moje dane</button>
+                </li>
+                <li class="nav-item active">
                     <button class="btn btn-outline-success" id="teacher-panel-log-out">Wyloguj się</button>
                 </li>
 
@@ -365,6 +371,72 @@
 
 
         </div>
+
+        <div id="teacher-panel-my-deposits" style="visibility: hidden">
+            <div id="teacher-panel-my-deposits-platform-access-timeout">
+
+            </div>
+            <div id="teacher-panel-my-deposits-my-balance">
+
+            </div>
+            
+            
+            
+            <div id="teacher-panel-my-deposits-all-deposits-done">
+                <table id="teacher-panel-my-deposits-table" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th class="" id="teacher-panel-my-deposits-table-datetime">Data i godzina przelewu</th>
+                            <th id="teacher-panel-my-deposits-table-title">Tytuł przelewu</th>
+                            <th id="teacher-panel-my-deposits-table-sender">Nadawca przelewu</th>
+                            <th id="teacher-panel-my-deposits-table-receiver">Odbiorca przelewu</th>
+                            <th id="teacher-panel-my-deposits-table-receiver-sum">Kwota</th>
+                            </tr>
+                    </thead>
+                    <tbody id="teacher-panel-my-deposits-table-all-transfers">
+                        <!-- ŁADOWANIE PRZELEWÓW Z BAZY DANYCH -->
+                    </tbody>
+
+                </table>
+            </div>
+            
+        </div>
+
+        <div id="teacher-panel-my-account-data-div" style="visibility:hidden">
+            <div id="teacher-panel-my-account-data-div-name-place">
+                Twoje dane:
+            </div>
+            
+            <div id="teacher-panel-my-account-main-container">
+                <form action="" id="teacher-panel-my-account-form">
+                    <label for="teacher-panel-my-account-email">E-mail</label><br>
+                    <input id="teacher-panel-my-account-email" name="teacher-panel-my-account-email"><br>
+                    <div class="error" id="teacher-panel-my-account-email-error"></div>
+        
+                    <label for="teacher-panel-my-account-password">Hasło</label><br>
+                    <input type="password" id="teacher-panel-my-account-password" name="teacher-panel-my-account-password"><br>
+                    <div class="error" id="teacher-panel-my-account-password-error"></div>
+        
+                    <label for="teacher-panel-my-account-password-2">Potwierdź hasło</label><br>
+                    <input type="password" id="teacher-panel-my-account-password-2" name="teacher-panel-my-account-password-2"><br>
+                    <div class="error" id="teacher-panel-my-account-password2-error"></div>
+        
+                    <label for="teacher-panel-my-account-first-name">Imię</label><br>
+                    <input id="teacher-panel-my-account-first-name" name="teacher-panel-my-account-first-name"><br>
+        
+                    <label for="teacher-panel-my-account-last-name">Nazwisko</label><br>
+                    <input id="teacher-panel-my-account-last-name" name="teacher-panel-my-account-last-name"><br>
+        
+                    <button type="submit" class="submit" id="teacher-panel-my-account-submit">Edytuj dane</button>
+                    <div class="error" id="teacher-panel-my-account-all-error"></div>
+        
+                    <!-- <button id="editUser-return-admin-users">Powrót</button> -->
+        
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
 
     </div>
     <script type="module" src="teacher-panel-script.js"></script>
