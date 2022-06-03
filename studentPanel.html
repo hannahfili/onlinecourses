@@ -35,7 +35,7 @@
                     <button class="btn btn-outline-success" id="student-panel-check-deposit-button">Moje opłaty</button>
                 </li>
                 <li class="nav-item active">
-                    <button class="btn btn-outline-success" id="student-panel-my-data">Moje dane</button>
+                    <button class="btn btn-outline-success" id="student-panel-my-account-data">Moje dane</button>
                 </li>
                 
                 <li class="nav-item active">
@@ -201,6 +201,39 @@
                 </table>
             </div>
             
+        </div>
+
+        <div id="student-panel-my-account-data-div" style="visibility:hidden">
+            <div id="student-panel-my-account-data-div-name-place">
+                Twoje dane:
+            </div>
+            <div id="student-panel-my-account-main-container">
+                <form action="" id="student-panel-my-account-form">
+                    <label for="student-panel-my-account-email">E-mail</label><br>
+                    <input id="student-panel-my-account-email" name="student-panel-my-account-email"><br>
+                    <div class="error" id="student-panel-my-account-email-error"></div>
+        
+                    <label for="student-panel-my-account-password">Hasło</label><br>
+                    <input type="password" id="student-panel-my-account-password" name="student-panel-my-account-password"><br>
+                    <div class="error" id="student-panel-my-account-password-error"></div>
+        
+                    <label for="student-panel-my-account-password-2">Potwierdź hasło</label><br>
+                    <input type="password" id="student-panel-my-account-password-2" name="student-panel-my-account-password-2"><br>
+                    <div class="error" id="student-panel-my-account-password2-error"></div>
+        
+                    <label for="student-panel-my-account-first-name">Imię</label><br>
+                    <input id="student-panel-my-account-first-name" name="student-panel-my-account-first-name"><br>
+        
+                    <label for="student-panel-my-account-last-name">Nazwisko</label><br>
+                    <input id="student-panel-my-account-last-name" name="student-panel-my-account-last-name"><br>
+        
+                    <button type="submit" class="submit" id="student-panel-my-account-submit">Edytuj wybrane dane</button>
+                    <div class="error" id="student-panel-my-account-all-error"></div>
+        
+                    <!-- <button id="editUser-return-admin-users">Powrót</button> -->
+        
+                </form>
+            </div>
         </div>
     </div>
 

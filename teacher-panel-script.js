@@ -9,7 +9,7 @@ import {
     addFileElementManager, checkIfUserIsLoggedIn, refreshToken, getUserInfo
 } from './general-script.js';
 import {
-    addMeetingManager
+    addMeetingManager, setMainContainerToDeposits, setMainContainerToMyData
 }
     from './student-panel-script.js';
 
@@ -21,32 +21,59 @@ let rightArrowClicked = 0;
 window.onload = (async function () {
     await redirectToIndexIfUserIsNotLoggedInTeacher();
     let userInfo = await getUserInfo(localStorage.getItem("loggedInUserId"));
+    let teacherId=userInfo.id;
     console.log(userInfo);
     let pageName = id("teacher-panel-page-name");
     let nameTextNode = document.createTextNode(`${userInfo["email"]}`);
     pageName.appendChild(nameTextNode);
 
     let divForTable = id("teacher-panel-week-timetable");
-    let divForWeekData = id("teacher-panel-week-name");
     let divForShiftForm = id("teacher-panel-shift-form");
+    let divForMyData=id('teacher-panel-my-account-data-div');
+    let divForDeposits=id('teacher-panel-my-deposits');
 
+    let divForWeekData = id("teacher-panel-week-name");
+    
+    
+    let filePrefix="teacher-panel";
 
     let weekStartEnd = setMondayAndSaturdayForThisWeek();
     console.log(localStorage.getItem("setMainContainerToShiftForm"));
 
     if (localStorage.getItem("setMainContainerToShiftForm") == "true") {
-        // divForTable.remove();
-        // divForTable.style.visibility="visible";
+        divForTable.remove();
+        divForMyData.remove();
+        divForDeposits.remove();
+
         localStorage.setItem("setMainContainerToShiftForm", false);
-        await setMainContainerToCalendar(divForTable, divForWeekData, weekStartEnd);
-        await setMainContainerToShiftForm(divForShiftForm, weekStartEnd);
+        await setMainContainerToCalendar(divForTable, divForWeekData, weekStartEnd, filePrefix, teacherId);
+        await setMainContainerToShiftForm(divForShiftForm, weekStartEnd, filePrefix, teacherId);
     }
     else if (localStorage.getItem("setMainContainerToCalendar") == "true") {
         divForShiftForm.remove();
-        localStorage.setItem("setMainContainerToCalendar", false);
-        await setMainContainerToCalendar(divForTable, divForWeekData, weekStartEnd);
-    }
+        divForMyData.remove();
+        divForDeposits.remove();
 
+        localStorage.setItem("setMainContainerToCalendar", false);
+        await setMainContainerToCalendar(divForTable, divForWeekData, weekStartEnd, filePrefix, teacherId);
+    }
+    else if (localStorage.getItem("setMainContainerToDeposits") == "true") {
+        divForShiftForm.remove();
+        divForTable.remove();
+        divForMyData.remove();
+
+        localStorage.setItem("setMainContainerToDeposits", false);
+        await setMainContainerToDeposits("teacher-panel");
+    }
+    else if (localStorage.getItem("setMainContainerToMyData") == "true") {
+        divForShiftForm.remove();
+        divForTable.remove();
+        divForDeposits.remove();
+        
+
+        localStorage.setItem("setMainContainerToMyData", false);
+        await setMainContainerToMyData("teacher-panel");
+    }
 
     let buttonToShowCalendar = id("teacher-panel-show-calendar-button");
     buttonToShowCalendar.addEventListener('click', async function (e) {
@@ -74,21 +101,33 @@ window.onload = (async function () {
         await logOut();
         window.location="index.html";
     });
+    let buttonMyDeposits = id("teacher-panel-my-deposits-button");
+    buttonMyDeposits.addEventListener('click', async function (e) {
+        e.preventDefault();
+        localStorage.setItem("setMainContainerToDeposits", true);
+        window.location.reload();
+    });
+    let buttonMyData = id("teacher-panel-my-account-data");
+    buttonMyData.addEventListener('click', async function (e) {
+        e.preventDefault();
+        localStorage.setItem("setMainContainerToMyData", true);
+        window.location.reload();
+    });
 
 
 
 });
-async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd) {
+async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd, filePrefix, teacherId) {
     divForShiftForm.style.visibility = "visible";
-    let buttonMonthShiftForm = id("teacher-panel-month-shift-button");
-    let buttonOneTimeShiftForm = id("teacher-panel-one-time-shift-button");
-    let buttonToDeleteOneDayShift = id("teacher-panel-delete-shift-from-particular-date-button");
-    let buttonToDeleteOneMonthShift = id("teacher-panel-delete-shift-from-particular-month-button");
+    let buttonMonthShiftForm = id(`${filePrefix}-month-shift-button`);
+    let buttonOneTimeShiftForm = id(`${filePrefix}-one-time-shift-button`);
+    let buttonToDeleteOneDayShift = id(`${filePrefix}-delete-shift-from-particular-date-button`);
+    let buttonToDeleteOneMonthShift = id(`${filePrefix}-delete-shift-from-particular-month-button`);
 
-    let divMonthShiftForm = id("teacher-panel-form-for-month-shift");
-    let divOneTimeShiftForm = id("teacher-panel-form-for-one-time-shift");
-    let divDeleteOneDayShiftForm = id("teacher-panel-form-for-delete-shift");
-    let divDeleteMonthShiftForm = id("teacher-panel-form-for-delete-shift-month");
+    let divMonthShiftForm = id(`${filePrefix}-form-for-month-shift`);
+    let divOneTimeShiftForm = id(`${filePrefix}-form-for-one-time-shift`);
+    let divDeleteOneDayShiftForm = id(`${filePrefix}-form-for-delete-shift`);
+    let divDeleteMonthShiftForm = id(`${filePrefix}-form-for-delete-shift-month`);
 
 
     buttonMonthShiftForm.addEventListener('click', async function (e) {
@@ -97,7 +136,7 @@ async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd) {
         buttonMonthShiftForm.remove();
         buttonOneTimeShiftForm.remove();
         divMonthShiftForm.style.visibility = "visible";
-        await setMonthShifts();
+        await setMonthShifts(filePrefix, teacherId);
     });
     buttonOneTimeShiftForm.addEventListener('click', async function (e) {
         e.preventDefault();
@@ -105,7 +144,7 @@ async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd) {
         buttonMonthShiftForm.remove();
         buttonOneTimeShiftForm.remove();
         divOneTimeShiftForm.style.visibility = "visible";
-        await setOneTimeShift();
+        await setOneTimeShift(filePrefix, teacherId);
     });
     buttonToDeleteOneDayShift.addEventListener('click', async function (e) {
         e.preventDefault();
@@ -115,7 +154,7 @@ async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd) {
         buttonOneTimeShiftForm.remove();
         buttonToDeleteOneDayShift.remove();
 
-        let dateInput = id("teacher-panel-form-for-delete-shift-date-choice");
+        let dateInput = id(`${filePrefix}-form-for-delete-shift-date-choice`);
 
         let today = new Date();
         let tomorrowForDateMaker = today.getTime() + 86400000;
@@ -124,7 +163,7 @@ async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd) {
         dateInput.min = date;
         dateInput.value = date;
         divDeleteOneDayShiftForm.style.visibility = "visible";
-        await deleteShiftManager();
+        await deleteShiftManager(filePrefix, teacherId);
     });
     buttonToDeleteOneMonthShift.addEventListener('click', async function (e) {
         e.preventDefault();
@@ -136,18 +175,18 @@ async function setMainContainerToShiftForm(divForShiftForm, weekStartEnd) {
         buttonToDeleteOneMonthShift.remove();
 
         divDeleteMonthShiftForm.style.visibility = "visible";
-        await deleteManyShiftsManager();
+        await deleteManyShiftsManager(filePrefix, teacherId);
     });
 }
 
-async function deleteManyShiftsManager() {
-    let selectForMonth = id("teacher-panel-form-for-delete-shift-month-select");
-    setMonthsToChoose(selectForMonth, 'teacher-panel-form-for-delete-shift-month-select-option-');
+async function deleteManyShiftsManager(filePrefix, teacherId) {
+    let selectForMonth = id(`${filePrefix}-form-for-delete-shift-month-select`);
+    setMonthsToChoose(selectForMonth, `${filePrefix}-form-for-delete-shift-month-select-option-`);
 
-    let submitButton = id("teacher-panel-form-for-delete-shift-month-submit-button");
+    let submitButton = id(`${filePrefix}-form-for-delete-shift-month-submit-button`);
     submitButton.addEventListener('click', async function (e) {
         e.preventDefault();
-        let deleted = await deleteManyShiftsFromDatabase(selectForMonth.value);
+        let deleted = await deleteManyShiftsFromDatabase(selectForMonth.value, teacherId);
         if (deleted) {
             alert('Usunięto dyżury z wybranego miesiąca');
             localStorage.setItem("setMainContainerToShiftForm", true);
@@ -156,7 +195,7 @@ async function deleteManyShiftsManager() {
         else alert('BŁĄD SERWERA. Nie udało się usunąć dyżurów z wybranego miesiąca');
     });
 }
-async function deleteManyShiftsFromDatabase(monthSelected, teacher = localStorage.getItem("loggedInUserId")) {
+async function deleteManyShiftsFromDatabase(monthSelected, teacher) {
     let allShifts = await getAllTeachersShiftsOrAppointments("Shifts", teacher);
     let shiftsForChosenMonth = allShifts.filter(shift => new Date(shift.date).getMonth() == monthSelected);
     console.log(shiftsForChosenMonth);
@@ -189,12 +228,12 @@ async function deleteManyShiftsFromDatabase(monthSelected, teacher = localStorag
     return true;
 
 }
-async function deleteShiftManager() {
-    let submitButton = id("teacher-panel-form-for-delete-shift-submit-button");
+async function deleteShiftManager(filePrefix, teacherId) {
+    let submitButton = id(`${filePrefix}-form-for-delete-shift-submit-button`);
     submitButton.addEventListener('click', async function (e) {
         e.preventDefault();
-        let dateToDelete = id("teacher-panel-form-for-delete-shift-date-choice").value;
-        let deleted = await deleteShiftsOfChosenDateFromDatabase(dateToDelete);
+        let dateToDelete = id(`${filePrefix}-form-for-delete-shift-date-choice`).value;
+        let deleted = await deleteShiftsOfChosenDateFromDatabase(dateToDelete, teacherId);
         if (deleted) {
             alert('Pomyślnie usunięto dyżury z wybranego dnia');
             localStorage.setItem("setMainContainerToShiftForm", true);
@@ -222,23 +261,24 @@ function setMonthsToChoose(selectForMonth, optionId) {
     }
 }
 
-async function setMonthShifts() {
+async function setMonthShifts(filePrefix, teacherId) {
     let selectsWithStartTimes = 0;
     let weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    console.log('SET MONTH SHIFTS')
+    console.log(filePrefix);
+    let selectForMonth = id(`${filePrefix}-form-for-month-shift-month-choice`);
 
-    let selectForMonth = id("teacher-panel-form-for-month-shift-month-choice");
 
-
-    setMonthsToChoose(selectForMonth, 'teacher-panel-form-for-month-shift-month-choice-');
+    setMonthsToChoose(selectForMonth, `${filePrefix}-form-for-month-shift-month-choice-`);
 
     for (let i = 0; i < weekdays.length; i++) {
         let weekday = weekdays[i];
-        let weekDaySelectStartHour = id(`teacher-panel-form-for-month-shift-${weekday}-setup-start-hour`);
-        let weekDaySelectEndHour = id(`teacher-panel-form-for-month-shift-${weekday}-setup-end-hour`);
+        let weekDaySelectStartHour = id(`${filePrefix}-form-for-month-shift-${weekday}-setup-start-hour`);
+        let weekDaySelectEndHour = id(`${filePrefix}-form-for-month-shift-${weekday}-setup-end-hour`);
 
 
         let option = document.createElement('option');
-        option.setAttribute('id', `teacher-panel-form-for-month-shift-${weekday}-setup-end-hour-option-none`);
+        option.setAttribute('id', `${filePrefix}-form-for-month-shift-${weekday}-setup-end-hour-option-none`);
         option.value = 'none';
         option.textContent = '-';
         weekDaySelectEndHour.appendChild(option);
@@ -275,14 +315,14 @@ async function setMonthShifts() {
             weekDaySelectEndHour.innerHTML = '';
             if (startIndex == -1) {
                 let option = document.createElement('option');
-                option.setAttribute('id', `teacher-panel-form-for-month-shift-${weekday}-setup-end-hour-option-none`);
+                option.setAttribute('id', `${filePrefix}-form-for-month-shift-${weekday}-setup-end-hour-option-none`);
                 option.textContent = "-";
                 weekDaySelectEndHour.appendChild(option);
             }
             else {
                 for (let i = startIndex; i < endTimes.length; i++) {
                     let option = document.createElement('option');
-                    option.setAttribute('id', `teacher-panel-form-for-month-shift-${weekday}-setup-end-hour-option-${i}`);
+                    option.setAttribute('id', `${filePrefix}-form-for-month-shift-${weekday}-setup-end-hour-option-${i}`);
                     option.value = endTimes[i];
                     option.textContent = endTimes[i];
                     weekDaySelectEndHour.appendChild(option);
@@ -294,12 +334,12 @@ async function setMonthShifts() {
         });
 
     }
-    let submitButton = id("teacher-panel-form-for-month-shift-submit-button");
+    let submitButton = id(`${filePrefix}-form-for-month-shift-submit-button`);
     submitButton.addEventListener('click', async function (e) {
         e.preventDefault();
-        await addManyShiftsManager();
+        await addManyShiftsManager(filePrefix, teacherId);
     });
-    let returnButton = id("teacher-panel-form-for-month-shift-return-button");
+    let returnButton = id(`${filePrefix}-form-for-month-shift-return-button`);
     returnButton.addEventListener('click', async function (e) {
         e.preventDefault();
         localStorage.setItem("setMainContainerToShiftForm", true);
@@ -307,16 +347,16 @@ async function setMonthShifts() {
     });
 }
 
-async function addManyShiftsManager() {
+async function addManyShiftsManager(filePrefix, teacherId) {
 
-    let errorContainer = id("teacher-panel-form-for-month-shift-error-container");
+    let errorContainer = id(`${filePrefix}-form-for-month-shift-error-container`);
 
     let weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     let shiftStartsEnds = [];
     for (let i = 0; i < weekdays.length; i++) {
         let weekday = weekdays[i];
-        let weekDaySelectStartHour = id(`teacher-panel-form-for-month-shift-${weekday}-setup-start-hour`);
-        let weekDaySelectEndHour = id(`teacher-panel-form-for-month-shift-${weekday}-setup-end-hour`);
+        let weekDaySelectStartHour = id(`${filePrefix}-form-for-month-shift-${weekday}-setup-start-hour`);
+        let weekDaySelectEndHour = id(`${filePrefix}-form-for-month-shift-${weekday}-setup-end-hour`);
 
         let data = {
             "weekday": weekday,
@@ -326,17 +366,18 @@ async function addManyShiftsManager() {
         }
         if (weekDaySelectStartHour.value != "none") shiftStartsEnds.push(data);
     }
-    let shiftsAdded = await addManyShiftsToDatabaseManager(shiftStartsEnds);
+    let shiftsAdded = await addManyShiftsToDatabaseManager(shiftStartsEnds, filePrefix, teacherId);
     // if(noneValueFound) errorContainer.textContent="Godzina rozpoczęcia dyżuru musi być ustawiona dla każdego z dni"
 }
-async function addManyShiftsToDatabaseManager(shiftStartsEnds) {
-    let firstSevenDaysOfChosenMonth = checkWeekdaysForFirstSevenDaysOfChosenMonth();
+async function addManyShiftsToDatabaseManager(shiftStartsEnds, filePrefix, teacherId) {
+    let firstSevenDaysOfChosenMonth = checkWeekdaysForFirstSevenDaysOfChosenMonth(id(`${filePrefix}-form-for-month-shift-month-choice`).value);
     let errorOccured = false;
     for (let i = 0; i < firstSevenDaysOfChosenMonth.length; i++) {
         let dayOfMonth = firstSevenDaysOfChosenMonth[i];
         let shiftStartEndForParticularWeekday = shiftStartsEnds.filter(shift => shift.weekday_number == dayOfMonth.weekday_number);
         if (shiftStartEndForParticularWeekday.length > 0) {
-            let addedCorrectly = await setShiftForChosenWeekdayForNextMonth(dayOfMonth, shiftStartEndForParticularWeekday[0]);
+            let addedCorrectly = await setShiftForChosenWeekdayForNextMonth(dayOfMonth, shiftStartEndForParticularWeekday[0],
+                id(`${filePrefix}-form-for-month-shift-month-choice`).value, teacherId);
             if (!addedCorrectly) errorOccured = true;
         }
         // console.log(shiftStartEndForParticularWeekday);
@@ -349,8 +390,7 @@ async function addManyShiftsToDatabaseManager(shiftStartsEnds) {
     }
     else alert('BŁĄD SERWERA - nie udało się dodać wszystkich dyżurów');
 }
-async function setShiftForChosenWeekdayForNextMonth(dayOfMonth, shiftData, month = id("teacher-panel-form-for-month-shift-month-choice").value,
-    teacher = localStorage.getItem("loggedInUserId")) {
+async function setShiftForChosenWeekdayForNextMonth(dayOfMonth, shiftData, month, teacher) {
     // await addOneShiftToDatabase(date, startTime, endTime);
     console.log(shiftData);
     let firstDateForShift = dayOfMonth.date;
@@ -413,7 +453,7 @@ async function addManyShiftsToDatabase(allShiftsToAdd) {
     if (responseNotOkayFound || errorOccured) return false;
     return true;
 }
-function checkWeekdaysForFirstSevenDaysOfChosenMonth(month = id("teacher-panel-form-for-month-shift-month-choice").value) {
+function checkWeekdaysForFirstSevenDaysOfChosenMonth(month) {
     let chosenMonthFirstSevenDays = [];
     console.log(month);
     for (let i = 1; i <= 7; i++) {
@@ -454,11 +494,11 @@ function changeWeekdayNameToNumber(weekdayName) {
     return number;
 
 }
-async function setOneTimeShift() {
+async function setOneTimeShift(filePrefix, teacherId) {
 
     // value="2018-07-22" min="2018-01-01" max="2018-12-31">
 
-    let inputForDate = id("teacher-panel-form-for-one-time-shift-date-choice");
+    let inputForDate = id(`${filePrefix}-form-for-one-time-shift-date-choice`);
     let today = new Date();
     let tomorrowForDateMaker = today.getTime() + 86400000;
     let tomorrow = new Date(tomorrowForDateMaker);
@@ -467,8 +507,8 @@ async function setOneTimeShift() {
     inputForDate.value = date;
     inputForDate.min = date;
 
-    let selectStartTime = id("teacher-panel-form-for-one-time-shift-select-start-time");
-    let selectEndTime = id("teacher-panel-form-for-one-time-shift-select-end-time")
+    let selectStartTime = id(`${filePrefix}-form-for-one-time-shift-select-start-time`);
+    let selectEndTime = id(`${filePrefix}-form-for-one-time-shift-select-end-time`)
     selectStartTime.addEventListener('change', function () {
         // console.log('ZMIANA');
         let endTimes = ['09:30', '11:15', '13:00', '14:45', '16:30', '18:15', '20:00'];
@@ -500,7 +540,7 @@ async function setOneTimeShift() {
         for (let i = startIndex; i < endTimes.length; i++) {
             // console.log(endTimes[i]);
             let option = document.createElement('option');
-            option.setAttribute('id', `teacher-panel-form-for-one-time-shift-select-end-time-option-${i}`);
+            option.setAttribute('id', `${filePrefix}-form-for-one-time-shift-select-end-time-option-${i}`);
             option.value = endTimes[i];
             option.textContent = endTimes[i];
             selectEndTime.appendChild(option);
@@ -508,18 +548,19 @@ async function setOneTimeShift() {
 
     });
 
-    let checkboxForDeletionOtherShifts = id("teacher-panel-form-for-one-time-shift-checkbox-for-delete");
-    let errorContainer = id("teacher-panel-form-for-one-time-shift-error-container");
+    let checkboxForDeletionOtherShifts = id(`${filePrefix}-form-for-one-time-shift-checkbox-for-delete`);
+    let errorContainer = id(`${filePrefix}-form-for-one-time-shift-error-container`);
 
-    let submitButton = id("teacher-panel-form-for-one-time-shift-submit-button");
+    let submitButton = id(`${filePrefix}-form-for-one-time-shift-submit-button`);
     submitButton.addEventListener('click', async function (e) {
         e.preventDefault();
         if (selectStartTime.value == "none") errorContainer.textContent = "Proszę wybrać godzinę rozpoczęcia dyżuru!";
         else {
-            await setShift(inputForDate.value, selectStartTime.value, selectEndTime.value, checkboxForDeletionOtherShifts);
+            await setShift(inputForDate.value, selectStartTime.value, selectEndTime.value,
+                checkboxForDeletionOtherShifts, filePrefix, teacherId);
         }
     });
-    let returnButton = id("teacher-panel-form-for-one-time-shift-return-button");
+    let returnButton = id(`${filePrefix}-form-for-one-time-shift-return-button`);
     returnButton.addEventListener('click', async function (e) {
         e.preventDefault();
         localStorage.setItem("setMainContainerToShiftForm", true);
@@ -528,8 +569,8 @@ async function setOneTimeShift() {
 
 
 }
-async function setShift(date, startTime, endTime, checkboxForDeletionOtherShifts) {
-    let errorContainer = id("teacher-panel-form-for-one-time-shift-error-container");
+async function setShift(date, startTime, endTime, checkboxForDeletionOtherShifts, filePrefix, teacherId) {
+    let errorContainer = id(`${filePrefix}-form-for-one-time-shift-error-container`);
     let deleteOtherShiftsFromChosenDate = false;
     if (checkboxForDeletionOtherShifts.checked) deleteOtherShiftsFromChosenDate = true;
 
@@ -547,10 +588,10 @@ async function setShift(date, startTime, endTime, checkboxForDeletionOtherShifts
         }
     }
     else {
-        let shiftsCoverOneAnother = await checkIfShiftsDoCoverOneAnother(date, startTime, endTime);
+        let shiftsCoverOneAnother = await checkIfShiftsDoCoverOneAnother(date, startTime, endTime, teacherId);
         if (shiftsCoverOneAnother) errorContainer.textContent = "Dyżur nie może być utworzony, ponieważ pokrywa się czasowo z innym, już istniejacym";
         else {
-            let shiftAddedCorrectly = await addOneShiftToDatabase(date, startTime, endTime);
+            let shiftAddedCorrectly = await addOneShiftToDatabase(date, startTime, endTime, teacherId);
             if (!shiftAddedCorrectly) errorContainer.textContent = "BŁĄD SERWERA. Nie udało się dodać dyżuru";
             else {
                 errorContainer.textContent = '';
@@ -562,7 +603,7 @@ async function setShift(date, startTime, endTime, checkboxForDeletionOtherShifts
     }
 
 }
-async function checkIfShiftsDoCoverOneAnother(date, startTime, endTime, teacher = localStorage.getItem("loggedInUserId")) {
+async function checkIfShiftsDoCoverOneAnother(date, startTime, endTime, teacher) {
     let shiftsForChosenDate = await getTeachersShiftsForParticularDate(date);
     let shiftsForChosenDateParsed = [];
     shiftsForChosenDate.forEach(function (element) {
@@ -615,7 +656,7 @@ async function checkIfShiftsDoCoverOneAnother(date, startTime, endTime, teacher 
     return coverageOccured;
 
 }
-async function addOneShiftToDatabase(date, startTime, endTime, teacher = localStorage.getItem("loggedInUserId")) {
+async function addOneShiftToDatabase(date, startTime, endTime, teacher) {
     let response;
     let responseNotOkayFound = false;
     let errorOccured = false;
@@ -646,7 +687,7 @@ async function addOneShiftToDatabase(date, startTime, endTime, teacher = localSt
     if (responseNotOkayFound || errorOccured) return false;
     return true;
 }
-async function getTeachersShiftsForParticularDate(chosenDate, teacher = localStorage.getItem("loggedInUserId")) {
+async function getTeachersShiftsForParticularDate(chosenDate, teacher) {
     let allTeachersShifts = await getAllTeachersShiftsOrAppointments("Shifts", teacher);
     let shiftsForChosenDate = allTeachersShifts
         .filter(
@@ -654,7 +695,7 @@ async function getTeachersShiftsForParticularDate(chosenDate, teacher = localSto
         );
     return shiftsForChosenDate;
 }
-async function deleteShiftsOfChosenDateFromDatabase(chosenDate, teacher = localStorage.getItem("loggedInUserId")) {
+async function deleteShiftsOfChosenDateFromDatabase(chosenDate, teacher) {
 
     console.log(chosenDate);
     let shiftsForChosenDate = await getTeachersShiftsForParticularDate(chosenDate, teacher);
@@ -689,15 +730,16 @@ async function deleteShiftsOfChosenDateFromDatabase(chosenDate, teacher = localS
     if (responseNotOkayFound || errorOccured) return false;
     return true;
 }
-async function setMainContainerToCalendar(divForTable, divForWeekData, weekStartEnd) {
+async function setMainContainerToCalendar(divForTable, divForWeekData, weekStartEnd, filePrefix, teacherId) {
 
     divForTable.style.visibility = "visible";
     displayUpperInfo(divForWeekData, weekStartEnd);
-    setWeekdaysDates(weekStartEnd);
+    setWeekdaysDates(weekStartEnd, filePrefix);
 
-    await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".teacher-panel-week-day-indicator"), "teacher-panel-timetable-");
+    await displayWeekTimetable(weekStartEnd, document.querySelectorAll(`.${filePrefix}-week-day-indicator`),
+    `${filePrefix}-timetable-`, teacherId);
 
-    let buttonDisplayNextWeek = id("teacher-panel-next-week-button");
+    let buttonDisplayNextWeek = id(`${filePrefix}-next-week-button`);
     buttonDisplayNextWeek.addEventListener('click', async function (e) {
         e.preventDefault();
         divForTable.style.visibility = "hidden";
@@ -706,11 +748,12 @@ async function setMainContainerToCalendar(divForTable, divForWeekData, weekStart
         let weekStartEnd = setMondayAndSaturdayForThisWeek(howManyWeeksToAdd);
         divForTable.style.visibility = "visible";
         displayUpperInfo(divForWeekData, weekStartEnd, howManyWeeksToAdd);
-        setWeekdaysDates(weekStartEnd);
-        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".teacher-panel-week-day-indicator"), "teacher-panel-timetable-");
+        setWeekdaysDates(weekStartEnd, filePrefix);
+        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(`.${filePrefix}-week-day-indicator`),
+        `${filePrefix}-timetable-`, teacherId);
     });
 
-    let buttonDisplayPreviousWeek = id("teacher-panel-previous-week-button");
+    let buttonDisplayPreviousWeek = id(`${filePrefix}-previous-week-button`);
     buttonDisplayPreviousWeek.addEventListener('click', async function (e) {
         e.preventDefault();
         divForTable.style.visibility = "hidden";
@@ -719,8 +762,9 @@ async function setMainContainerToCalendar(divForTable, divForWeekData, weekStart
         let weekStartEnd = setMondayAndSaturdayForThisWeek(howManyWeeksToAdd);
         divForTable.style.visibility = "visible";
         displayUpperInfo(divForWeekData, weekStartEnd, howManyWeeksToAdd);
-        setWeekdaysDates(weekStartEnd);
-        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(".teacher-panel-week-day-indicator"), "teacher-panel-timetable-");
+        setWeekdaysDates(weekStartEnd, filePrefix);
+        await displayWeekTimetable(weekStartEnd, document.querySelectorAll(`.${filePrefix}-week-day-indicator`),
+        `${filePrefix}-timetable-`, teacherId);
     });
 
 
@@ -758,9 +802,9 @@ function displayUpperInfo(divForWeekData, weekStartEnd, howManyWeeksToAdd = 0) {
     // divForWeekData.appendChild(br);
     // divForWeekData.appendChild(dateGeneralInfoTextNode2);
 }
-function setWeekdaysDates(weekStartEnd) {
+function setWeekdaysDates(weekStartEnd, filePrefix) {
 
-    let weekdays = document.querySelectorAll(".teacher-panel-week-day");
+    let weekdays = document.querySelectorAll(`.${filePrefix}-week-day`);
     // console.log(weekdays);
     let startMonday = weekStartEnd["monday_date"];
     // let weekdaysArray=[...]
@@ -771,10 +815,10 @@ function setWeekdaysDates(weekStartEnd) {
 
 
         let newDateDiv = document.createElement("div");
-        newDateDiv.setAttribute("id", `teacher-panel-text-node-with-date-${i}`);
+        newDateDiv.setAttribute("id", `${filePrefix}-text-node-with-date-${i}`);
         newDateDiv.textContent = dateToDisplayAsString;
 
-        let oldDateDiv = id(`teacher-panel-text-node-with-date-${i}`);
+        let oldDateDiv = id(`${filePrefix}-text-node-with-date-${i}`);
         if (oldDateDiv) oldDateDiv.remove();
 
         weekdays[i].appendChild(newDateDiv);
@@ -784,7 +828,7 @@ function setWeekdaysDates(weekStartEnd) {
 
 }
 async function displayWeekTimetable(weekStartEnd, allTdsInTable, cellId,
-    teacherId = localStorage.getItem("loggedInUserId"), displayButtons = false) {
+    teacherId, displayButtons = false) {
     console.log(teacherId)
     allTdsInTable.forEach(td => {
         td.style.backgroundColor = "";
@@ -888,7 +932,8 @@ async function displayShiftOrAppointmentDataInTable(dataDict, tdElementToChangeB
             tdElementToChangeBackgroundColor.textContent = info;
 
         }
-        if (dataDict["student"] == localStorage.getItem("loggedInUserId") || dataDict["teacher"] == localStorage.getItem("loggedInUserId")) {
+        if (dataDict["student"] == localStorage.getItem("loggedInUserId") || dataDict["teacher"] == localStorage.getItem("loggedInUserId")
+        || localStorage.getItem("loggedInRole")==adminRoleId) {
             let buttonForDeletingMeeting = document.createElement('button');
             buttonForDeletingMeeting.setAttribute('id', `${tdElementToChangeBackgroundColorName}${tdIdWeekDayName}-${i}-delete-meeting-button`);
             buttonForDeletingMeeting.textContent = 'ODWOŁAJ';
@@ -899,6 +944,7 @@ async function displayShiftOrAppointmentDataInTable(dataDict, tdElementToChangeB
                 let meetingDeleted = await deleteMeeting(i, date, teacherId);
                 if (meetingDeleted) {alert('Pomyślnie usunięto spotkanie!');
                 localStorage.setItem("setMainContainerToSetMeeting", true);
+                localStorage.setItem("setMainContainerToShowShifts", true);
                 localStorage.setItem("setMainContainerToShiftForm", true);
                 window.location.reload();
             }
@@ -949,7 +995,7 @@ async function getMeetingIdToDelete(startHourIndex, meetingDateInProperFormat, t
         );
     return meetingsToDelete[0].id;
 }
-async function addMeeting(startHourIndex, meetingDate, topic, teacherId, studentId = localStorage.getItem("loggedInUserId")) {
+async function addMeeting(startHourIndex, meetingDate, topic, teacherId, studentId) {
     let startTime = getStartTime(startHourIndex);
     let endTime = getEndTime(startHourIndex);
     let date = displayDate(meetingDate, true);
@@ -1124,7 +1170,7 @@ function setWeekDayName(shiftDayOfWeek) {
     return tdIdWeekDayName;
 }
 
-async function getTeacherShiftsForThisWeek(weekStartEnd, teacherId = localStorage.getItem("loggedInUserId")) {
+async function getTeacherShiftsForThisWeek(weekStartEnd, teacherId) {
     let allTeachersShifts = await getAllTeachersShiftsOrAppointments("Shifts", teacherId);
     let shiftsForThisWeek = allTeachersShifts
         .filter(
@@ -1135,7 +1181,7 @@ async function getTeacherShiftsForThisWeek(weekStartEnd, teacherId = localStorag
     // console.log(allTeachersShifts);
     // console.log(shiftsForThisWeek);
 }
-async function getAllTeachersShiftsOrAppointments(whatToGet, teacherId = localStorage.getItem("loggedInUserId")) {
+async function getAllTeachersShiftsOrAppointments(whatToGet, teacherId) {
     let response;
     let responseNotOkayFound = false;
     let errorOccured = false;
@@ -1257,5 +1303,5 @@ function checkIfUserIsTeacher() {
 }
 export {
     displayUpperInfo, displayWeekTimetable, setMondayAndSaturdayForThisWeek, displayDate, setWeekdaysDates,
-    addMeeting, getStartTime, getEndTime
+    addMeeting, getStartTime, getEndTime, setMainContainerToShiftForm, deleteShiftsOfChosenDateFromDatabase
 }

@@ -11,19 +11,23 @@ import {
 //dotyczy pliku addUser.html
 let add_user_form = id("add-user-form");
 if (add_user_form) {
-    add_user_form.addEventListener("submit", function (e, mode) {
-        userManager(e, "addition");
+    add_user_form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        userManager("addition");
     });
 }
 //----------------------------------
 //dotyczy pliku editUser.html
 window.onload = (async function () {
+    await redirectToIndexIfUserIsNotLoggedInAdmin();
     await setEditUserDefaultFields();
+
 });
 let edit_user_form = id("edit-user-form");
 if (edit_user_form) {
-    edit_user_form.addEventListener("submit", function (e, mode) {
-        userManager(e, "edition");
+    edit_user_form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        await userManager("edition");
     });
 }
 let editUserReturnButton = id("editUser-return-admin-users");
@@ -33,11 +37,10 @@ editUserReturnButton.addEventListener('click', function (e) {
 });
 
 //------------------------------------
-async function userManager(e, mode) {
+async function userManager(mode) {
 
-    e.preventDefault();
     console.log("userManager");
-    await redirectToIndexIfUserIsNotLoggedInAdmin();
+    
     let checked = false;
     let prefix;
     if (mode == "edition") prefix = "edit";
@@ -217,5 +220,7 @@ async function setEditUserDefaultFields() {
 
     console.log("set edit refresh: ", localStorage.getItem("refresh_token"));
 
-
+}
+export{
+    userManager, validateAdditionOrEditionData, makeDictionaryOfInputData
 }
