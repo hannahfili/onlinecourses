@@ -1,12 +1,51 @@
-import * as exports from './general-script.js'; 
+import * as exports from './general-script.js';
 Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
 window.onload = (async function () {
-    redirectToIndexIfUserIsNotLoggedInAdmin();
+    // redirectToIndexIfUserIsNotLoggedInAdmin();
+    await redirectToIndexIfUserIsNotLoggedInAtAll();
     await displayCourseExtensiveDetails();
 });
 async function displayCourseExtensiveDetails(courseId = localStorage.getItem("courseIdToShowDetails")) {
+    let adminLoggedIn = false;
+    let teacherLoggedIn = false;
+    let studentLoggedIn = false;
+
+    await redirectToIndexIfUserIsNotLoggedInAtAll();
+    switch (localStorage.getItem("loggedInRole")) {
+        case adminRoleId:
+            adminLoggedIn = true;
+            break;
+        case teacherRoleId:
+            teacherLoggedIn = true;
+            break;
+        case studentRoleId:
+            studentLoggedIn = true;
+            break;
+    }
+
+
+
     let pageTitle = id("courses-all-modules-sections-page-title");
     let errorContainer = id("courses-all-modules-sections-error-message");
+
+    
+
+    let mainMenuButton=id("courses-all-modules-sections-main-menu-button");
+    mainMenuButton.addEventListener('click', function(e){
+        e.preventDefault();
+        if(adminLoggedIn) window.location="adminPanel.html";
+        else if(teacherLoggedIn) window.location="teacherPanel.html";
+        else if(studentLoggedIn) window.location="studentPanel.html";
+    })
+
+
+
+
+
+
+
+
+
 
 
     let courseDetails = await getCourseDetails(courseId, errorContainer);
@@ -22,7 +61,10 @@ async function displayCourseExtensiveDetails(courseId = localStorage.getItem("co
     let modulesContainer = id("courses-all-modules-sections-courses-modules");
     let addModuleDiv = id("courses-all-modules-sections-add-module-div");
 
+
+
     let buttonToEditCourse = id("courses-all-modules-sections-edit-course");
+    if (studentLoggedIn) buttonToEditCourse.style.visibility = "hidden";
     buttonToEditCourse.addEventListener('click', function (e) {
         e.preventDefault();
         localStorage.setItem("courseIdEdit", courseId);
@@ -30,6 +72,8 @@ async function displayCourseExtensiveDetails(courseId = localStorage.getItem("co
     });
 
     let buttonToAddModule = id("courses-all-modules-sections-add-module");
+
+    if (studentLoggedIn) buttonToAddModule.style.visibility = "hidden";
     buttonToAddModule.addEventListener('click', async function (e) {
         e.preventDefault();
         await addModuleManager(courseId, true, addModuleDiv);
@@ -37,23 +81,25 @@ async function displayCourseExtensiveDetails(courseId = localStorage.getItem("co
     await displayTeachers(course);
     let modulesToDisplay = await displayManyModules(course);
 
+    if (!studentLoggedIn) {
+        let buttonToSubmitOrderChange = document.createElement('button');
+        buttonToSubmitOrderChange.setAttribute('id', `course-all-modules-sections-button-to-submit-order-change`);
+        buttonToSubmitOrderChange.textContent = "Zatwierdź zmianę kolejności modułów";
+        if (modulesToDisplay == 1) modulesContainer.appendChild(buttonToSubmitOrderChange);
 
-    let buttonToSubmitOrderChange = document.createElement('button');
-    buttonToSubmitOrderChange.setAttribute('id', `course-all-modules-sections-button-to-submit-order-change`);
-    buttonToSubmitOrderChange.textContent = "Zatwierdź zmianę kolejności modułów";
-    if (modulesToDisplay == 1) modulesContainer.appendChild(buttonToSubmitOrderChange);
+        buttonToSubmitOrderChange.addEventListener('click', async function (e) {
+            e.preventDefault();
+            let orderNumbersChangedCorrectly = await changeOrderNumbersToThoseFromSelects(modulesContainer);
+            if (orderNumbersChangedCorrectly) {
+                alert('Zapisano zmianę kolejności modułów');
+                window.location.reload();
+            }
+            else {
 
-    buttonToSubmitOrderChange.addEventListener('click', async function (e) {
-        e.preventDefault();
-        let orderNumbersChangedCorrectly = await changeOrderNumbersToThoseFromSelects(modulesContainer);
-        if (orderNumbersChangedCorrectly) {
-            // alert('Zapisano zmianę kolejności modułów');
-            // window.location.reload();
-        }
-        else {
+            }
+        })
+    }
 
-        }
-    })
 
 }
 async function changeOrderNumbersToThoseFromSelects(mainContaner) {
@@ -172,28 +218,48 @@ async function displayManyModules(course) {
 
 }
 async function displayOneModule(moduleDict, allModulesContainer, newOrderNumbers) {
+    let adminLoggedIn = false;
+    let teacherLoggedIn = false;
+    let studentLoggedIn = false;
+    switch (localStorage.getItem("loggedInRole")) {
+        case adminRoleId:
+            adminLoggedIn = true;
+            break;
+        case teacherRoleId:
+            teacherLoggedIn = true;
+            break;
+        case studentRoleId:
+            studentLoggedIn = true;
+            break;
+    }
+
+
+
     let mainContainerForModule = document.createElement('div');
     mainContainerForModule.setAttribute('id', `course-all-modules-sections-module-${moduleDict["id"]}`);
     mainContainerForModule.setAttribute('class', `course-all-modules-sections-modules-main-containers`);
 
+    if (!studentLoggedIn) {
+        let selectOrderWithDefaultOrderValueFromDb = document.createElement('select');
+        selectOrderWithDefaultOrderValueFromDb.setAttribute('id', `course-all-modules-sections-module-select-${moduleDict["id"]}`);
+        selectOrderWithDefaultOrderValueFromDb.setAttribute('class', `course-all-modules-sections-module-order-selects`);
 
-    let selectOrderWithDefaultOrderValueFromDb = document.createElement('select');
-    selectOrderWithDefaultOrderValueFromDb.setAttribute('id', `course-all-modules-sections-module-select-${moduleDict["id"]}`);
-    selectOrderWithDefaultOrderValueFromDb.setAttribute('class', `course-all-modules-sections-module-order-selects`);
-
-    let option;
-    for (let i = 0; i < newOrderNumbers.length; i++) {
-        option = document.createElement('option');
-        option.setAttribute('id', `course-all-modules-sections-module-select-${moduleDict["id"]}-option-${newOrderNumbers[i]}`);
-        option.setAttribute('value', newOrderNumbers[i]);
-        if (option.value == moduleDict["order_number"]) {
-            option.setAttribute('selected', 'selected');
+        let option;
+        for (let i = 0; i < newOrderNumbers.length; i++) {
+            option = document.createElement('option');
+            option.setAttribute('id', `course-all-modules-sections-module-select-${moduleDict["id"]}-option-${newOrderNumbers[i]}`);
+            option.setAttribute('value', newOrderNumbers[i]);
+            if (option.value == moduleDict["order_number"]) {
+                option.setAttribute('selected', 'selected');
+            }
+            option.textContent = newOrderNumbers[i];
+            selectOrderWithDefaultOrderValueFromDb.appendChild(option);
         }
-        option.textContent = newOrderNumbers[i];
-        selectOrderWithDefaultOrderValueFromDb.appendChild(option);
+
+        mainContainerForModule.appendChild(selectOrderWithDefaultOrderValueFromDb);
+
     }
 
-    mainContainerForModule.appendChild(selectOrderWithDefaultOrderValueFromDb);
 
     let nameTextNode = document.createTextNode("Nazwa modułu:");
     mainContainerForModule.appendChild(nameTextNode);
@@ -212,7 +278,8 @@ async function displayOneModule(moduleDict, allModulesContainer, newOrderNumbers
 
     mainContainerForModule.appendChild(moduleDescriptionElement);
 
-    let divForButtonToChangeModuleNameOrDescription = document.createElement('div');
+    if (!studentLoggedIn){
+        let divForButtonToChangeModuleNameOrDescription = document.createElement('div');
     divForButtonToChangeModuleNameOrDescription.setAttribute('id', `course-all-modules-sections-module-${moduleDict["id"]}-div-for-button`);
 
     let buttonToChangeModuleNameOrDescription = document.createElement('button');
@@ -239,18 +306,18 @@ async function displayOneModule(moduleDict, allModulesContainer, newOrderNumbers
     buttonToDeleteModule.textContent = "X Usuń moduł";
     buttonToDeleteModule.addEventListener('click', async function (e) {
         e.preventDefault();
-        let confirmed=confirm('Czy na pewno chcesz usunąć ten moduł?');
-        if(confirmed){
-            let deleted=await deleteModule(moduleDict.id);
-            if(deleted){
+        let confirmed = confirm('Czy na pewno chcesz usunąć ten moduł?');
+        if (confirmed) {
+            let deleted = await deleteModule(moduleDict.id);
+            if (deleted) {
                 alert('Pomyślnie usunięto moduł');
                 window.location.reload();
             }
-            else{
+            else {
                 alert('BŁĄD SERWERA! Nie udało się usunąć modułu');
             }
         }
-        
+
     });
 
     mainContainerForModule.appendChild(buttonToDeleteModule);
@@ -275,14 +342,18 @@ async function displayOneModule(moduleDict, allModulesContainer, newOrderNumbers
         }
 
     });
-    let displaySections = await displayModuleSections(moduleDict["id"], mainContainerForModule);
+
+    }
+
+    
+    let displaySections = await displayModuleSections(moduleDict["id"], mainContainerForModule, studentLoggedIn);
 
 
     allModulesContainer.appendChild(mainContainerForModule);
 
 
 }
-async function deleteModule(moduleId){
+async function deleteModule(moduleId) {
     let response;
     let responseNotOkayFound = false;
     let errorOccured = false;
@@ -303,7 +374,7 @@ async function deleteModule(moduleId){
     if (responseNotOkayFound || errorOccured) return false;
     return true;
 }
-async function displayModuleSections(moduleId, mainContainerForModule) {
+async function displayModuleSections(moduleId, mainContainerForModule, studentLoggedIn) {
     let errorContainerForDisplayingSections = document.createElement("div");
     errorContainerForDisplayingSections.setAttribute("id", `course-all-modules-sections-module-${moduleId}-sections-display-error-div`);
     errorContainerForDisplayingSections.setAttribute("class", "error");
@@ -318,7 +389,7 @@ async function displayModuleSections(moduleId, mainContainerForModule) {
     containerForAllModuleSections.setAttribute("class", "course-all-modules-sections-modules-all-sections-div");
     for (let i = 0; i < sectionsAssignedToThisModule.length; i++) {
 
-        await displaySectionElements(sectionsAssignedToThisModule[i], errorContainerForDisplayingSections, containerForAllModuleSections);
+        await displaySectionElements(sectionsAssignedToThisModule[i], errorContainerForDisplayingSections, containerForAllModuleSections, studentLoggedIn);
 
     }
     mainContainerForModule.appendChild(containerForAllModuleSections);
@@ -335,7 +406,7 @@ function getLastElementOrderNumber(elementsAssignedToThisSection) {
     return maxNumber;
 
 }
-async function displaySectionElements(sectionDict, errorContainerForDisplayingSections, allSectionsDiv) {
+async function displaySectionElements(sectionDict, errorContainerForDisplayingSections, allSectionsDiv, studentLoggedIn) {
 
     let elementsAssignedToThisSection = await getElementsAssignedToThisSection(sectionDict["id"], errorContainerForDisplayingSections);
     elementsAssignedToThisSection.sort(function (a, b) { return a["order_number"] > b["order_number"] ? 1 : -1 });
@@ -352,7 +423,8 @@ async function displaySectionElements(sectionDict, errorContainerForDisplayingSe
     sectionNameElement.textContent = `Nazwa sekcji: ${sectionDict["name"]}`;
     sectionMainContainer.appendChild(sectionNameElement);
 
-    let deleteSectionButton = document.createElement('button');
+    if(!studentLoggedIn){
+        let deleteSectionButton = document.createElement('button');
     deleteSectionButton.setAttribute('id', `course-all-modules-sections-section-${sectionDict["id"]}-button-to-delete-section`);
     deleteSectionButton.setAttribute('class', `course-all-modules-sections-section-buttons-to-delete-section btn btn-danger`);
     deleteSectionButton.textContent = "X usuń sekcję";
@@ -366,6 +438,9 @@ async function displaySectionElements(sectionDict, errorContainerForDisplayingSe
             else alert('BŁĄD! Nie udało się usunąć sekcji');
         }
     });
+    
+
+    
 
     let divForInputs = document.createElement('div');
     divForInputs.setAttribute('id', `course-all-modules-sections-section-${sectionDict["id"]}-div-for-inputs`);
@@ -399,7 +474,7 @@ async function displaySectionElements(sectionDict, errorContainerForDisplayingSe
             await addFileElementToSection(sectionDict["id"], divForInputs, newElementOrderNumber);
         }
     });
-
+    }
     // console.log(elementsAssignedToThisSection);
     for (let i = 0; i < elementsAssignedToThisSection.length; i++) {
         let element = elementsAssignedToThisSection[i];
@@ -426,8 +501,8 @@ async function displaySectionElements(sectionDict, errorContainerForDisplayingSe
             elementMainContainer.appendChild(aHrefToDownloadFile);
         }
 
-
-        let buttonToDeleteSectionElement = document.createElement('button');
+if(!studentLoggedIn){
+    let buttonToDeleteSectionElement = document.createElement('button');
         buttonToDeleteSectionElement.setAttribute('id', `course-all-modules-sections-section-${element["section"]}-${elementType}-element-${element["id"]}-button-to-delete`);
         buttonToDeleteSectionElement.setAttribute('class', `course-all-modules-sections-section-elements-delete-buttons btn btn-danger`);
         buttonToDeleteSectionElement.textContent = "X usuń element";
@@ -444,6 +519,9 @@ async function displaySectionElements(sectionDict, errorContainerForDisplayingSe
 
 
         elementMainContainer.appendChild(buttonToDeleteSectionElement);
+
+}
+        
 
         sectionMainContainer.appendChild(elementMainContainer);
 

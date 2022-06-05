@@ -2,7 +2,7 @@ import * as exports from './general-script.js';
 Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
 
 window.onload = (async function () {
-    redirectToIndexIfUserIsNotLoggedInAdmin();
+    exports.redirectToIndexIfUserIsNotLoggedInAtAll();
     
     await displayDetails();
 })
@@ -72,54 +72,8 @@ async function displayDetails(courseId = localStorage.getItem("courseIdToShowDet
 
     await displayAllModules(courseId, moduleContainerToDisplay);
 }
-async function addModuleToDatabase(courseId, name, description, orderNumber){
-    let data={
-        "course": courseId,
-        "name": name,
-        "description": description,
-        "order_number":orderNumber
-    };
-    let dataToPostJson=JSON.stringify(data);
-    let response;
-    let errorOccured = false;
-    let responseNotOkayFound = false;
-    try {
 
-        response = await fetch(`${appAddress}/items/Modules`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            },
-            body: dataToPostJson
-        });
-        if (!response.ok) responseNotOkayFound = true;
-    }
-    catch (err) {
-        console.error(`${err}`);
-        errorOccured = true;
-    }
-    console.log(response.statusText);
-    if (errorOccured || responseNotOkayFound) return false;
-    return true;
-}
-async function getModuleAsssignedToThisCourseLastOrderNumber(courseId) {
-    let modulesAssignedToThisCourse = await getModulesAssignedToThisCourse(courseId);
-    if (modulesAssignedToThisCourse == null) {
-        return -1;
-    }
-    else if (Object.keys(modulesAssignedToThisCourse).length == 0) {
-        return 0;
-    }
-    let maxOrderNumber = 0;
-    for (let key in modulesAssignedToThisCourse) {
-        if (Number(modulesAssignedToThisCourse[key]["order_number"]) > maxOrderNumber) {
-            maxOrderNumber = Number(modulesAssignedToThisCourse[key]["order_number"]);
-        }
-    }
-    return maxOrderNumber;
 
-}
 async function displayAllModules(courseId, containerToDisplay, containerForError) {
     let modulesAssignedToThisCourse = await getModulesAssignedToThisCourse(courseId);
     if (modulesAssignedToThisCourse == null) {
@@ -328,6 +282,7 @@ async function displayAllStudents(courseId, containerToDisplay, containerForErro
     buttonToDeleteManyStudents.addEventListener('click', async function (e) {
         e.preventDefault();
         await deleteManyUsersFromParticularCourseManager(checkboxesElements, courseId, containerForError);
+        window.location.reload();
     });
 }
 async function deleteManyUsersFromParticularCourseManager(checkboxes, courseId, errorContainer) {

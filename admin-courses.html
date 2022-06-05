@@ -17,11 +17,12 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
-                    <button class="btn btn-outline-success" onclick='window.location="adminPanel.html"'>Menu
+                    <button class="btn btn-outline-success" id="admin-courses-main-menu-button"onclick='window.location="adminPanel.html"'>Menu
                         główne</button>
                 </li>
                 <li class="nav-item active">
-                    <button class="btn btn-outline-success" onclick='window.location="addCourse.html"'>Dodaj
+                    <button class="btn btn-outline-success" id="admin-courses-add-course-button"
+                    onclick='window.location="addCourse.html"'>Dodaj
                         kurs</button>
                 </li>
             </ul>
@@ -41,14 +42,8 @@
                     <th></th>
                 </tr>
             </thead>
-            <tbody id="admin-courses-all-courses-table-display">
-
-            </tbody>
+            <tbody id="admin-courses-all-courses-table-display"></tbody>
         </table>
-    </div>
-    <div id="admin-courses-checkbox-options">
-        <button class="btn btn-danger disabled" id="admin-courses-delete-many-courses" type="button">Usuń zaznaczone
-            kursy</button>
     </div>
     <div id="admin-courses-error-message" class="error">
 

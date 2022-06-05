@@ -221,7 +221,7 @@ export async function getAllCoursesFromDatabase() {
     }
     return response;
 }
-export async function getAllItemsFromStudentsCoursesJunctionTable(containerForError) {
+export async function getAllItemsFromStudentsCoursesJunctionTable(containerForError=null) {
     let response;
     let errorCought = false;
     try {
@@ -240,8 +240,8 @@ export async function getAllItemsFromStudentsCoursesJunctionTable(containerForEr
     }
     let responseJson = [];
     if (!response.ok || errorCought) {
-        containerForError.textContent = "Wystąpił problem z pobieraniem studentów";
-        return responseJson;
+        if(containerForError!=null)containerForError.textContent = "Wystąpił problem z pobieraniem studentów";
+        return false;
     }
     responseJson = await response.json();
     // console.log(responseJson);
@@ -281,8 +281,15 @@ function getStudentsNotAssigned(allStudentsDictionary, studentsAssignedToThisCou
 
     return students;
 }
+export async function redirectToIndexIfUserIsNotLoggedInAtAll() {
+    if (!checkIfUserIsLoggedIn()) {
+        window.location = "index.html";
+    }
+    else {
+        // console.log("HELLO")
+    }
+}
 export async function updateCourse(courseId, fieldName, fieldValue, actualizationName) {
-    await redirectToIndexIfUserIsNotLoggedInAdmin();
     let response;
     let responseNotOkayFound = false;
     let errorOccured = false;
@@ -733,6 +740,23 @@ export function displayUpperInfo(divForWeekData, weekStartEnd, howManyWeeksToAdd
     // divForWeekData.appendChild(br);
     // divForWeekData.appendChild(dateGeneralInfoTextNode2);
 }
+export async function getModuleAsssignedToThisCourseLastOrderNumber(courseId) {
+    let modulesAssignedToThisCourse = await getModulesAssignedToThisCourse(courseId);
+    if (modulesAssignedToThisCourse == null) {
+        return -1;
+    }
+    else if (Object.keys(modulesAssignedToThisCourse).length == 0) {
+        return 0;
+    }
+    let maxOrderNumber = 0;
+    for (let key in modulesAssignedToThisCourse) {
+        if (Number(modulesAssignedToThisCourse[key]["order_number"]) > maxOrderNumber) {
+            maxOrderNumber = Number(modulesAssignedToThisCourse[key]["order_number"]);
+        }
+    }
+    return maxOrderNumber;
+
+}
 export async function addModuleManager(courseId, moduleToAddAtCourseAllModulesSectionsPage=false, containerToDisplayAddModule=null) {
     console.log("JESTEM")
     let lastModuleAssignedToThisCourseOrderNumber = await getModuleAsssignedToThisCourseLastOrderNumber(courseId);
@@ -807,6 +831,37 @@ export async function addModuleManager(courseId, moduleToAddAtCourseAllModulesSe
         }
         return moduleAdded;
     });
+    return true;
+}
+async function addModuleToDatabase(courseId, name, description, orderNumber){
+    let data={
+        "course": courseId,
+        "name": name,
+        "description": description,
+        "order_number":orderNumber
+    };
+    let dataToPostJson=JSON.stringify(data);
+    let response;
+    let errorOccured = false;
+    let responseNotOkayFound = false;
+    try {
+
+        response = await fetch(`${appAddress}/items/Modules`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
+            },
+            body: dataToPostJson
+        });
+        if (!response.ok) responseNotOkayFound = true;
+    }
+    catch (err) {
+        console.error(`${err}`);
+        errorOccured = true;
+    }
+    console.log(response.statusText);
+    if (errorOccured || responseNotOkayFound) return false;
     return true;
 }
 async function getTeachersShiftsForParticularDate(chosenDate, teacher) {
@@ -1789,6 +1844,11 @@ export async function displayShiftOrAppointmentDataInTable(dataDict, tdElementTo
                 localStorage.setItem("setMainContainerToSetMeeting", true);
                 localStorage.setItem("setMainContainerToShowShifts", true);
                 localStorage.setItem("setMainContainerToShiftForm", true);
+
+                // await notifyPersonAboutMeetingDeletion()
+
+
+
                 window.location.reload();
             }
                 else alert('BŁĄD SERWERA. Nie udało się usunąć spotkania');
