@@ -1,9 +1,5 @@
-import {
-    id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
-    validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
-    checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers
-} from './general-script.js';
+import * as exports from './general-script.js'; 
+Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
 let log_in_form = id("log-in-form");
 
 if (log_in_form) {

@@ -1,16 +1,6 @@
-import {
-    id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
-    validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
-    checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getUserInfo
-} from './general-script.js';
-import {
-    chooseTeacherAndSetMeeting, setMainContainerToDeposits
-} from './student-panel-script.js';
-import {
-    displayDate,
-    setMondayAndSaturdayForThisWeek, deleteShiftsOfChosenDateFromDatabase
-} from './teacher-panel-script.js';
+import * as exports from './general-script.js'; 
+Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
+
 
 let numberOfBoxesChecked = 0;
 
@@ -51,7 +41,7 @@ window.onload = (async function () {
     let divForInputToAddNewShifts=id("admin-panel-shift-form");
     let divForAllShifts = id("admin-panel-show-all-teachers-shifts");
     let divForAllMeetings = id("admin-panel-show-all-teachers-meetings");
-    let divForDeposits=id("admin-panel-all-deposits");
+    let divForDeposits=id("admin-panel-my-deposits");
 
 
     let weekStartEnd = setMondayAndSaturdayForThisWeek();
@@ -296,52 +286,6 @@ async function getAllSomethingFromDatabase(whatToGet) {
     let responseData = responseJson.data;
     return responseData;
 }
-async function deleteManyItemsManager(checkboxes, shifOrMeetingOrTransfer) {
-    let itemsToDelete = [];
-    for (let key in checkboxes) {
-        console.log(checkboxes[key].checked);
-        let itemToPush="";
-        if(shifOrMeetingOrTransfer=="Shifts"){
-            itemToPush=checkboxes[key].getAttribute('id').slice(23);
-        }
-        else if(shifOrMeetingOrTransfer=="Appointments"){
-            console.log(checkboxes[key].getAttribute('id'));
-            itemToPush=checkboxes[key].getAttribute('id').slice(25);
-        }
-        else if(shifOrMeetingOrTransfer=="Bank_transfers"){
-            console.log(checkboxes[key].getAttribute('id'));
-            itemToPush=checkboxes[key].getAttribute('id').slice(25);
-        }
-        if (checkboxes[key].checked) itemsToDelete.push(itemToPush);
-    }
-    console.log(itemsToDelete);
-    return await deleteManyItemsFromChosenCollection(shifOrMeetingOrTransfer, itemsToDelete);
-}
-async function deleteManyItemsFromChosenCollection(collectionName, shiftsIdsToRemove){
-    let bodyToDelete = JSON.stringify(shiftsIdsToRemove);
-
-
-    let response;
-    let responseNotOkayFound = false;
-    let errorOccured = false;
-    try {
-        response = await fetch(`${appAddress}/items/${collectionName}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            },
-            body: bodyToDelete
-        });
-        if (!response.ok) responseNotOkayFound = true;
-    }
-    catch (err) {
-        errorOccured = true;
-        console.error(`${err}`);
-    }
-    if (responseNotOkayFound || errorOccured) return false;
-    return true;
-}
 async function displayAllShifts(divForAllShifts, tbody) {
 
     divForAllShifts.style.visibility="visible";
@@ -467,19 +411,7 @@ async function displayAllShifts(divForAllShifts, tbody) {
 
     }
 }
-function enableDisableButtonVersion2(checkbox, buttonToEnableOrDisable, numberOfBoxesChecked) {
-    if (checkbox.checked) {
-        numberOfBoxesChecked += 1;
-        buttonToEnableOrDisable.disabled=false;
-    }
-    else {
-        numberOfBoxesChecked -= 1;
-        if (numberOfBoxesChecked < 1) {
-            buttonToEnableOrDisable.disabled=true;
-        }
-    }
-    return numberOfBoxesChecked;
-}
+
 async function deleteSomethingById(collectionName, itemId) {
     console.log(itemId);
     let response;
@@ -505,6 +437,3 @@ async function deleteSomethingById(collectionName, itemId) {
 
 
 
-export{
-    enableDisableButtonVersion2, deleteManyItemsManager
-}

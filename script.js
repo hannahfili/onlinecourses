@@ -456,7 +456,11 @@ async function displayUsersOneByOne(response) {
                 buttonBestowTeacherRoleUponPerson.setAttribute('class', `btn btn-secondary btn-success`);
                 buttonBestowTeacherRoleUponPerson.textContent = "Nadaj rolę nauczyciela";
 
-                buttonBestowTeacherRoleUponPerson.addEventListener('click', function () { updateUserData(person["id"], "role", teacherRoleId, "bestow teacher role") });
+                buttonBestowTeacherRoleUponPerson.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    await updateUserData(person["id"], "role", teacherRoleId, "bestow teacher role");
+                    window.location.reload();
+                 });
                 roleBox.appendChild(buttonBestowTeacherRoleUponPerson);
             }
             else {
@@ -465,7 +469,11 @@ async function displayUsersOneByOne(response) {
                 buttonCancelTeacherRoleUponPerson.setAttribute('class', `btn btn-secondary`);
                 buttonCancelTeacherRoleUponPerson.textContent = "Odbierz rolę nauczyciela";
 
-                buttonCancelTeacherRoleUponPerson.addEventListener('click', function () { updateUserData(person["id"], "role", studentRoleId, "cancel teacher role") });
+                buttonCancelTeacherRoleUponPerson.addEventListener('click', async function (e) { 
+                    e.preventDefault();
+                    await updateUserData(person["id"], "role", studentRoleId, "cancel teacher role");
+                    window.location.reload();
+                 });
                 roleBox.appendChild(buttonCancelTeacherRoleUponPerson);
             }
             row.appendChild(roleBox);
@@ -895,7 +903,7 @@ async function getTeacherDataById(id) {
             let first_name = json.data["first_name"];
             let last_name = json.data["last_name"];
             let email = json.data["email"];
-            if (first_name != null && last_name != null) return first_name + " " + last_name;
+            if (first_name != null && last_name != null && first_name != "" && last_name != "") return first_name + " " + last_name;
             else return email;
         }
     }
@@ -1331,7 +1339,7 @@ async function addCourseSetTeachersSelect(containerForSelect, alreadyExistingTea
         let email = teachersDictionary[key][2];
         let display = "";
 
-        if (first_name != null && last_name != null) display = first_name + " " + last_name;
+        if (first_name != null && last_name != null && first_name != "" && last_name != "") display = first_name + " " + last_name;
         else display = email;
 
         let option = document.createElement('option');

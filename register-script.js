@@ -1,15 +1,9 @@
-import {
-    id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
-    validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
-    checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers
-} from './general-script.js';
-import { displayDate } from './teacher-panel-script.js';
-
+import * as exports from './general-script.js'; 
+Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
 let register_form = id("register-form");
 if (register_form) {
-    register_form.addEventListener("submit", function (e) {
-        registerManager(e);
+    register_form.addEventListener("submit", async function (e) {
+        await registerManager(e);
     });
 }
 async function registerManager(e) {

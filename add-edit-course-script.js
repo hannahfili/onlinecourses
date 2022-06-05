@@ -1,10 +1,5 @@
-import {
-    id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
-    validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
-    checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails, updateCourse,
-    checkIfElementOccursInArrayMoreThanOnce, deleteTeacherFromCourse
-} from './general-script.js';
+import * as exports from './general-script.js'; 
+Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
 
 //------------------------------------------------------
 //dotyczy addCourse.html
@@ -128,7 +123,7 @@ async function addCourseSetTeachersSelect(containerForSelect, alreadyExistingTea
         let email = teachersDictionary[key][2];
         let display = "";
 
-        if (first_name != null && last_name != null) display = first_name + " " + last_name;
+        if (first_name != null && last_name != null && first_name != "" && last_name != "") display = first_name + " " + last_name;
         else display = email;
 
         option = document.createElement('option');
@@ -516,7 +511,7 @@ async function getTeacherDataById(id) {
             let first_name = json.data["first_name"];
             let last_name = json.data["last_name"];
             let email = json.data["email"];
-            if (first_name != null && last_name != null) return first_name + " " + last_name;
+            if (first_name != null && last_name != null && first_name != "" && last_name != "") return first_name + " " + last_name;
             else return email;
         }
     }
