@@ -8,7 +8,22 @@ let numberOfBoxesChecked = 0;
 
 async function addStudentsToCourse(courseId = localStorage.getItem("courseIdToAddStudents")) {
 
-    redirectToIndexIfUserIsNotLoggedInAdmin();
+    let adminLoggedIn = false;
+    let teacherLoggedIn = false;
+    let studentLoggedIn = false;
+    exports.redirectToIndexIfUserIsNotLoggedInAtAll();
+    switch (localStorage.getItem("loggedInRole")) {
+        case adminRoleId:
+            adminLoggedIn = true;
+            break;
+        case teacherRoleId:
+            teacherLoggedIn = true;
+            break;
+        case studentRoleId:
+            studentLoggedIn = true;
+            break;
+    }
+
     let buttonReturn = id("addStudentsToCourse-return-button");
     let buttonToReturnToShowCourseDetails=id("addStudentsToCourse-button-course-details");
     let buttonToAddManyStudents = id("addStudentsToCourse-add-many-students");
@@ -56,7 +71,7 @@ async function addStudentsToCourse(courseId = localStorage.getItem("courseIdToAd
     });
     buttonReturn.addEventListener('click', function (e) {
         e.preventDefault();
-        window.location = "admin-courses.html";
+        window.location="admin-courses.html";
     })
     buttonToReturnToShowCourseDetails.addEventListener('click', function (e) {
         e.preventDefault();

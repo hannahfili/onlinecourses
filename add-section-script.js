@@ -4,7 +4,7 @@ window.onload = (async function () {
     await addSectionDisplayManager();
 })
 async function addSectionDisplayManager(moduleId = localStorage.getItem("moduleIdToAddSectionTo")) {
-    await redirectToIndexIfUserIsNotLoggedInAdmin();
+    await exports.redirectToIndexIfUserIsNotLoggedInAtAll();
     let errorContainer = id("add-section-display-modules-errors");
     let moduleElementResponse = await getParticularModuleData(moduleId);
     if (moduleElementResponse == null) {

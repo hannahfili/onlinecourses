@@ -5,16 +5,47 @@ Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
 //dotyczy addCourse.html
 let edit_course_form = id("edit-course-form");
 window.onload = (async function () {
-    let buttonAllCourses=id("edit-course-all-courses-button");
-    let buttonMainMenu=id("edit-course-main-menu-button");
-    buttonAllCourses.addEventListener('click', function(e){
+    
+    let adminLoggedIn = false;
+    let teacherLoggedIn = false;
+    let studentLoggedIn = false;
+
+    await redirectToIndexIfUserIsNotLoggedInAtAll();
+    switch (localStorage.getItem("loggedInRole")) {
+        case adminRoleId:
+            adminLoggedIn = true;
+            break;
+        case teacherRoleId:
+            teacherLoggedIn = true;
+            break;
+        case studentRoleId:
+            studentLoggedIn = true;
+            break;
+    }
+    
+    let buttonAllCoursesEdit=id("edit-course-all-courses-button");
+    let buttonMainMenuEdit=id("edit-course-main-menu-button");
+    let buttonAllCoursesAdd=id('add-course-main-menu-button');
+
+    if(buttonAllCoursesEdit)buttonAllCoursesEdit.addEventListener('click', function(e){
         e.preventDefault();
         window.location="admin-courses.html";
     });
-    buttonMainMenu.addEventListener('click', function(e){
+    if(buttonMainMenuEdit)buttonMainMenuEdit.addEventListener('click', function(e){
         e.preventDefault();
-        window.location="adminPanel.html";
+        if(adminLoggedIn) window.location="adminPanel.html";
+        else if(teacherLoggedIn) window.location="teacherPanel.html";
+        else if(studentLoggedIn) window.location="studentPanel.html";
     })
+    if(buttonAllCoursesAdd)buttonAllCoursesAdd.addEventListener('click', function(e){
+        e.preventDefault();
+        if(adminLoggedIn) window.location="adminPanel.html";
+        else if(teacherLoggedIn) window.location="teacherPanel.html";
+        else if(studentLoggedIn) window.location="studentPanel.html";
+    })
+    
+    
+    
     if (document.body.contains(document.getElementById('add-course-teacher-default'))) {
         await addCourseSetTeachersSelect(document.getElementById('add-course-teacher-default'));
     }
@@ -37,7 +68,7 @@ if (add_course_form) {
     });
 }
 const buttonAddAnotherSelectTeacher = id("add-course-add-select-for-another-teacher");
-buttonAddAnotherSelectTeacher.onclick = async (e) => {
+if(buttonAddAnotherSelectTeacher)buttonAddAnotherSelectTeacher.onclick = async (e) => {
     e.preventDefault();
     await selectAnotherTeacher(0, "add-course-teacher-selects", "add-course-select-number-", "add-course");
 };
@@ -104,7 +135,7 @@ async function addCourseSetTeachersSelect(containerForSelect, alreadyExistingTea
     if (alreadyExistingTeachers == 3) {
         return;
     }
-    await redirectToIndexIfUserIsNotLoggedInAdmin();
+    await exports.redirectToIndexIfUserIsNotLoggedInAtAll();
 
     let teachersDictionary = await isolateParticularGroupOfUsersFromAllUsers(id("add-course-teacher-error"),
         teacherRoleId, "Wystąpił problem z pobieraniem nauczycieli z serwera", "teachers");
@@ -140,7 +171,6 @@ async function courseManager(e, mode, courseId = localStorage.getItem("courseIdE
 
     e.preventDefault();
     console.log("coursemanager");
-    await redirectToIndexIfUserIsNotLoggedInAdmin();
     let prefix = "";
 
     if (mode == "edition") prefix = "edit";
@@ -397,7 +427,7 @@ async function addTeacherDatabaseManyToManyManager(teacherId, courseId, prefix, 
 }
 async function editCourseSetDefaultValues(courseId = localStorage.getItem("courseIdEdit")) {
 
-    redirectToIndexIfUserIsNotLoggedInAdmin();
+    exports.redirectToIndexIfUserIsNotLoggedInAtAll();
 
     let teachersContainer = id("edit-course-teacher-selects");
     let errorContainer = id("edit-course-all-error");
@@ -415,6 +445,11 @@ async function editCourseSetDefaultValues(courseId = localStorage.getItem("cours
     let maxStudents = courseData["maximum_students_count"];
     maxStudents != null ? maxStudentsCountElem[0].placeholder = maxStudents : maxStudentsCountElem[0].placeholder = "";
 
+    let descriptionElem=exports.nameGetter('edit-course-description');
+    let description=courseData["description"];
+    description != null ? descriptionElem[0].placeholder = description.substring(0,25) : descriptionElem[0].placeholder = "";
+    
+    
     let teachersIDs = await getCourseTeachersAndIdFromCourses_directus_usersTable(courseId);
     let teachersNumber = Object.keys(teachersIDs).length;
     let editCourseFirstSelect = id("edit-course-teacher-default");

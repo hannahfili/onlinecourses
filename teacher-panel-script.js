@@ -73,6 +73,15 @@ window.onload = (async function () {
         await setMainContainerToMyData("teacher-panel");
     }
 
+    let fileWithCoursesPath="admin-courses.html";
+
+    let buttonToSeeTeachersCourses = id("teacher-panel-my-courses");
+    buttonToSeeTeachersCourses.addEventListener('click', async function (e) {
+        e.preventDefault();
+        console.log(fileWithCoursesPath);
+        window.location=fileWithCoursesPath;
+    });
+
     let buttonToShowCalendar = id("teacher-panel-show-calendar-button");
     buttonToShowCalendar.addEventListener('click', async function (e) {
         e.preventDefault();
@@ -116,21 +125,7 @@ window.onload = (async function () {
 
 });
 
-async function deleteShiftManager(filePrefix, teacherId) {
-    let submitButton = id(`${filePrefix}-form-for-delete-shift-submit-button`);
-    submitButton.addEventListener('click', async function (e) {
-        e.preventDefault();
-        let dateToDelete = id(`${filePrefix}-form-for-delete-shift-date-choice`).value;
-        let deleted = await deleteShiftsOfChosenDateFromDatabase(dateToDelete, teacherId);
-        if (deleted) {
-            alert('Pomyślnie usunięto dyżury z wybranego dnia');
-            localStorage.setItem("setMainContainerToShiftForm", true);
-            window.location.reload();
-        }
-        else alert('BŁĄD SERWERA! Nie udało się usunąć dyżurów z wybranego dnia');
 
-    });
-}
 
 
 

@@ -8,6 +8,9 @@ let rightArrowClicked = 0;
 
 window.onload = (async function () {
     await redirectToIndexIfUserIsNotLoggedInStudent();
+    let allCoursesPath="admin-courses.html";
+
+
     let userInfo = await getUserInfo(localStorage.getItem("loggedInUserId"));
     console.log(userInfo);
     let pageName = id("student-panel-page-name");
@@ -65,6 +68,12 @@ window.onload = (async function () {
         e.preventDefault();
         localStorage.setItem("setMainContainerToSetMeeting", true);
         window.location.reload();
+    });
+
+    let buttonToDisplayAllMeetings = id("student-panel-all-courses");
+    buttonToDisplayAllMeetings.addEventListener('click', async function (e) {
+        e.preventDefault();
+        window.location=allCoursesPath;
     });
 
     let buttonMainMenu = id("student-panel-main-menu");
