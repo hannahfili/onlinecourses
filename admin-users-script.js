@@ -1,9 +1,5 @@
-import {
-    id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
-    validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
-    checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers
-} from './general-script.js';
+import * as exports from './general-script.js'; 
+Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
 
 let checkboxesCount = 0;
 let numberOfBoxesChecked = 0;
@@ -86,7 +82,8 @@ async function displayUsersOneByOne(response) {
                 buttonBestowTeacherRoleUponPerson.setAttribute('class', `btn btn-secondary btn-success`);
                 buttonBestowTeacherRoleUponPerson.textContent = "Nadaj rolę nauczyciela";
 
-                buttonBestowTeacherRoleUponPerson.addEventListener('click', async function () {
+                buttonBestowTeacherRoleUponPerson.addEventListener('click', async function (e) {
+                    e.preventDefault();
                     await updateUserData(person["id"], "role", teacherRoleId, "bestow teacher role");
                     document.location.reload();
                 });
@@ -98,7 +95,8 @@ async function displayUsersOneByOne(response) {
                 buttonCancelTeacherRoleUponPerson.setAttribute('class', `btn btn-secondary`);
                 buttonCancelTeacherRoleUponPerson.textContent = "Odbierz rolę nauczyciela";
 
-                buttonCancelTeacherRoleUponPerson.addEventListener('click', async function () {
+                buttonCancelTeacherRoleUponPerson.addEventListener('click', async function (e) {
+                    e.preventDefault();
                     await updateUserData(person["id"], "role", studentRoleId, "cancel teacher role");
                     document.location.reload();
                 });
@@ -156,8 +154,9 @@ async function deleteManager(person) {
     let confirmed = confirmDeletion(person);
     let message;
     if (confirmed) {
-        await deleteUserFromDatabase(userId);
-        message = `Usunięto użytkownika: ${person["email"]}`;
+        let deleted=await deleteUserFromDatabase(userId);
+        if(deleted) message = `Usunięto użytkownika: ${person["email"]}`;
+        else message=`BŁĄD SERWERA. Nie udało się usunąć użytkownika: ${person["email"]}`;
     }
     else {
         message = `Użytkownik ${person["email"]} nie został usunięty`;
@@ -172,22 +171,7 @@ function confirmDeletion(user) {
     return answer;
 }
 
-async function deleteUserFromDatabase(userId) {
-    let response;
-    try {
-        response = await fetch(`${appAddress}/users/${userId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem("access_token")}`
-            }
-        });
-    }
-    catch (err) {
-        alert(err);
-        console.error(`${err}`)
-    }
-}
+
 function saveUserToEditAndRedirect(userDataJson) {
 
     localStorage.setItem("edit_user_id", userDataJson["id"]);

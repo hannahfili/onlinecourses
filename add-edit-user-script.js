@@ -1,13 +1,5 @@
-import {
-    id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
-    validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
-    checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
-    getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
-    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
-    getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules, deleteTeacherFromCourse,
-    addFileElementManager, checkIfUserIsLoggedIn, refreshToken, getUserInfo, updateUserData
-} from './general-script.js';
+import * as exports from './general-script.js'; 
+Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
 //dotyczy pliku addUser.html
 let add_user_form = id("add-user-form");
 if (add_user_form) {
@@ -220,7 +212,4 @@ async function setEditUserDefaultFields() {
 
     console.log("set edit refresh: ", localStorage.getItem("refresh_token"));
 
-}
-export{
-    userManager, validateAdditionOrEditionData, makeDictionaryOfInputData
 }

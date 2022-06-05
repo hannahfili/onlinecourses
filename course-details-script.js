@@ -1,11 +1,6 @@
-import {
-    id, classes, nameGetter, appAddress, studentRoleId, teacherRoleId, adminRoleId,
-    validateEmail, validatePassword, logOut, redirectToIndexIfUserIsNotLoggedInAdmin,
-    checkIfUserIsLoggedInAndIfItIsAdmin, getAllUsersFromDatabase, enableDisableButton,
-    isolateParticularGroupOfUsersFromAllUsers, getAllCoursesFromDatabase, getCourseDetails,
-    getStudentsFromStudentsCoursesJunctionTable, getAllItemsFromStudentsCoursesJunctionTable,
-    updateCourse, getSectionsAssignedToTheModule, getAllSections, checkIfElementOccursInArrayMoreThanOnce,
-    getTeachersDataToDisplay, getModulesAssignedToThisCourse, getAllModules} from './general-script.js';
+import * as exports from './general-script.js'; 
+Object.entries(exports).forEach(([name, exported]) => window[name] = exported);
+
 window.onload = (async function () {
     redirectToIndexIfUserIsNotLoggedInAdmin();
     
@@ -76,82 +71,6 @@ async function displayDetails(courseId = localStorage.getItem("courseIdToShowDet
 
 
     await displayAllModules(courseId, moduleContainerToDisplay);
-}
-async function addModuleManager(courseId, moduleToAddAtCourseAllModulesSectionsPage=false, containerToDisplayAddModule=null) {
-    console.log("JESTEM")
-    let lastModuleAssignedToThisCourseOrderNumber = await getModuleAsssignedToThisCourseLastOrderNumber(courseId);
-    if (lastModuleAssignedToThisCourseOrderNumber == -1) return false;
-
-    let containerForDisplayingUpperButtons;
-    let prefix;
-    if(!moduleToAddAtCourseAllModulesSectionsPage){
-        prefix="course-details";
-        containerForDisplayingUpperButtons=id("course-details-add-module-upper-buttons-div");
-    }
-    else{
-        prefix="courses-all-modules-sections"
-        containerForDisplayingUpperButtons=document.createElement("div");
-        containerForDisplayingUpperButtons.setAttribute('id', `${prefix}-add-module-upper-buttons-div`);
-        containerToDisplayAddModule.appendChild(containerForDisplayingUpperButtons);
-    }
-    
-    let containerForInput=document.createElement('div');
-    containerForInput.setAttribute('id', `${prefix}-add-module-div`);
-    
-    // <label for="add-course-name">Nazwa kursu</label><br>
-    //             <input id="add-course-name" name="add-course-name" placeholder="Pole obowiązkowe" required><br>
-    //             <div class="error" id="add-course-name-error"></div>
-    let labelForNameInput=document.createElement('label');
-    labelForNameInput.setAttribute('for', `${prefix}-module-name-input`);
-    labelForNameInput.textContent="Nazwa modułu";
-    
-    let moduleNameInput=document.createElement('input');
-    moduleNameInput.setAttribute('id',`${prefix}-module-name-input`);
-    moduleNameInput.setAttribute('placeholder','Pole obowiązkowe');
-
-    let labelForDescriptionInput=document.createElement('label');
-    labelForDescriptionInput.setAttribute('for', `${prefix}-module-description-input`);
-    labelForDescriptionInput.textContent="Opis modułu";
-    
-    let moduleDescriptionInput=document.createElement('input');
-    moduleDescriptionInput.setAttribute('id',`${prefix}-module-description-input`);
-
-    let submitButton=document.createElement('button');
-    submitButton.setAttribute('id',`${prefix}-add-module-submit-button`);
-    submitButton.textContent="Zapisz";
-    let buttonToDeleteOptionToAddModule=document.createElement('button');
-    buttonToDeleteOptionToAddModule.setAttribute('id', `${prefix}-button-to-delete-option-to-add-module`);
-    buttonToDeleteOptionToAddModule.setAttribute('class', 'btn btn-danger');
-    buttonToDeleteOptionToAddModule.textContent = "X";
-
-      
-    containerForInput.appendChild(labelForNameInput);
-    containerForInput.appendChild(moduleNameInput);
-    containerForInput.appendChild(labelForDescriptionInput);
-    containerForInput.appendChild(moduleDescriptionInput);
-    containerForInput.appendChild(submitButton);
-    containerForInput.appendChild(buttonToDeleteOptionToAddModule);
-
-    containerForDisplayingUpperButtons.appendChild(containerForInput);
-    
-    buttonToDeleteOptionToAddModule.addEventListener('click', function(e){
-        e.preventDefault();
-        buttonToDeleteOptionToAddModule.parentElement.remove();
-    })
-    
-    submitButton.addEventListener('click', async function(e){
-        e.preventDefault();
-        let moduleAdded=await addModuleToDatabase(courseId, moduleNameInput.value, moduleDescriptionInput.value, lastModuleAssignedToThisCourseOrderNumber+1);
-        if(moduleAdded){
-            alert('Pomyślnie dodano moduł');
-            location.reload();
-        }
-        else{
-            alert('Wystąpił błąd przy dodawaniu modułu');
-        }
-        return moduleAdded;
-    });
-    return true;
 }
 async function addModuleToDatabase(courseId, name, description, orderNumber){
     let data={
@@ -523,7 +442,4 @@ async function deleteStudentFromCourseDatabase(itemInjunction_directus_users_Cou
     if (responseNotOkayFound || errorOccured) return false;
     return true;
 
-}
-export{
-    addModuleManager
 }
